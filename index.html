@@ -337,58 +337,66 @@
            🛒 VIEW: STORE & GRID LAYOUT
            ========================================================================== */
         .store-controls {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            margin-bottom: 16px;
-        }
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 16px;
+}
 
-        .search-bar-wrapper {
-            position: relative;
-            width: 100%;
-        }
-        .search-input {
-            width: 100%;
-            height: 45px;
-            background: var(--bg-surface);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-md);
-            padding: 0 16px 0 40px;
-            color: var(--text-main);
-            font-size: 0.9rem;
-            outline: none;
-        }
-        .search-bar-wrapper i {
-            position: absolute;
-            left: 14px;
-            top: 14px;
-            color: var(--text-muted);
-        }
+.search-bar-wrapper {
+    position: relative; /* Esencial para que la lupa se posicione respecto a este contenedor */
+    width: 100%;
+}
 
-        .filter-tags {
-            display: flex;
-            gap: 8px;
-            overflow-x: auto;
-            white-space: nowrap;
-            padding-bottom: 4px;
-        }
-        .filter-tags::-webkit-scrollbar { display: none; }
-        
-        .tag-btn {
-            padding: 8px 16px;
-            background: var(--bg-surface);
-            border: 1px solid var(--border-color);
-            color: var(--text-muted);
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            cursor: pointer;
-        }
-        .tag-btn.active {
-            background: var(--accent-emerald);
-            color: white;
-            border-color: var(--accent-emerald);
-        }
+.search-input {
+    width: 100%;
+    height: 45px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 0 16px 0 42px; /* Dejamos 42px libres a la izquierda para que el texto no pise la lupa */
+    color: var(--text-main);
+    font-size: 0.9rem;
+    outline: none;
+    box-sizing: border-box; /* Evita que el padding deforme el tamaño del input */
+}
+
+/* 🌟 CORRECCIÓN DE LA LUPA: Alineación matemática perfecta a la izquierda */
+.search-bar-wrapper i {
+    position: absolute;
+    left: 14px;
+    top: 50%; /* La baja hasta la mitad del contenedor */
+    transform: translateY(-50%); /* Resta exactamente la mitad de la altura del icono para centrarlo */
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    pointer-events: none; /* Hace que si el usuario pulsa la lupa, el foco vaya al input de texto */
+}
+
+.filter-tags {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    white-space: nowrap;
+    padding-bottom: 4px;
+}
+.filter-tags::-webkit-scrollbar { display: none; }
+ 
+.tag-btn {
+    padding: 8px 16px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+.tag-btn.active {
+    background: var(--accent-emerald);
+    color: white;
+    border-color: var(--accent-emerald);
+}
 
         .products-grid {
             display: grid;
@@ -738,6 +746,28 @@
     transition: width 0.4s ease;
 
 }
+
+      /* Colores de badges y bordes dinámicos para los perfiles */
+.vip-status-card.status-vip-active {
+    border-left: 4px solid var(--accent-gold) !important;
+}
+.vip-status-card.status-vip-active .badge-status {
+    color: var(--accent-gold);
+}
+
+.vip-status-card.status-vip-expired {
+    border-left: 4px solid #ef4444 !important;
+}
+.vip-status-card.status-vip-expired .badge-status {
+    color: #ef4444;
+}
+
+.vip-status-card.status-regular {
+    border-left: 4px solid var(--text-muted) !important;
+}
+.vip-status-card.status-regular .badge-status {
+    color: var(--text-muted);
+}  
     </style>
 </head>
 <body>
@@ -747,7 +777,7 @@
             <div id="header-avatar" class="user-avatar">U</div>
             <div class="user-meta">
                 <h5 id="header-username">@Invitado</h5>
-                <p>Santos Bienestar</p>
+                
             </div>
         </div>
         <button class="menu-dots-btn" onclick="toggleDropdown(event)">
@@ -877,7 +907,16 @@
                 <p id="stat-favs">0 Items</p>
             </div>
         </div>
-
+        
+<!-- Dentro de tu contenedor de Perfil o Dashboard -->
+<div class="profile-section">
+    
+    <!-- 🚨 AQUÍ SE INYECTARÁN LOS DATOS VIP DE FORMA AUTOMÁTICA -->
+    <div id="profile-vip-card-container"></div>
+    
+    <!-- El resto de tus datos de usuario (Puntos, nombre, etc) siguen aquí abajo... -->
+</div>
+        
         <div class="dashboard-card">
             <h4 style="margin-bottom:12px; display:flex; align-items:center; gap:6px;"><i data-lucide="calculator" style="color:var(--accent-emerald);"></i> Calculadora de Hidratación</h4>
             <div class="calc-wrapper">
@@ -954,6 +993,92 @@
     </nav>
 
     <script>
+        // 🌟 LISTA DE SUSCRIPTORES VIP (Actualizar manualmente aquí)
+// Puedes añadir tantos IDs como quieras de forma estructurada
+const VIP_SUBSCRIBERS_LIST = {
+    "123456789": { active: true,  expiryDate: "15/12/2026", planName: "Plan Premium Oro" },
+    "987654321": { active: false, expiryDate: "01/05/2026", planName: "Plan Básico Mensual" },
+    "554433221": { active: true,  expiryDate: "28/02/2027", planName: "Plan Vitalicio" }
+};
+
+/**
+ * Verifica el estado VIP del usuario actual conectado a la Web App de Telegram
+ * @returns {Object} Datos formateados de la suscripción
+ */
+function checkUserVipStatus() {
+    // Valores por defecto para un usuario sin suscripción activa o que no está en la lista
+    const defaultStatus = {
+        isVip: false,
+        statusText: "Usuario Regular",
+        expiryText: "Sin suscripción activa",
+        plan: "Ninguno",
+        colorClass: "status-regular"
+    };
+
+    // Validamos si la Web App está corriendo dentro de Telegram para extraer el ID real
+    if (!window.Telegram || !tg.initDataUnsafe || !tg.initDataUnsafe.user) {
+        console.warn("⚠️ No se detectó entorno de Telegram. Devolviendo estado regular de prueba.");
+        return defaultStatus;
+    }
+
+    const currentTelegramId = tg.initDataUnsafe.user.id.toString();
+    const vipData = VIP_SUBSCRIBERS_LIST[currentTelegramId];
+
+    // Si el usuario existe en tu lista manual
+    if (vipData) {
+        if (vipData.active) {
+            return {
+                isVip: true,
+                statusText: "Miembro VIP Activo 💎",
+                expiryText: `Expira el: ${vipData.expiryDate}`,
+                plan: vipData.planName,
+                colorClass: "status-vip-active"
+            };
+        } else {
+            return {
+                isVip: false,
+                statusText: "Suscripción Expirada ❌",
+                expiryText: `Finalizó el: ${vipData.expiryDate}`,
+                plan: vipData.planName,
+                colorClass: "status-vip-expired"
+            };
+        }
+    }
+
+    return defaultStatus;
+}
+
+/**
+ * Renderiza los datos de la suscripción directamente en la pantalla de Perfil
+ * Llama a esta función cada vez que abras o cambies a la pestaña 'profile'
+ */
+function updateProfileSubscriptionUI() {
+    const vipInfo = checkUserVipStatus();
+    
+    const container = document.getElementById('profile-vip-card-container');
+    if (!container) return;
+
+    // Generamos una interfaz visual limpia y adaptada al estado
+    container.innerHTML = `
+        <div class="vip-status-card ${vipInfo.colorClass}" style="padding: 14px; border-radius: var(--radius-md); margin-bottom: 16px; border: 1px solid var(--border-color); background: var(--bg-surface);">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                <span style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); font-weight: 700;">Estado de Cuenta</span>
+                <span style="font-size: 0.85rem; font-weight: bold;" class="badge-status">${vipInfo.statusText}</span>
+            </div>
+            <div style="margin-top: 10px;">
+                <p style="font-size: 0.95rem; margin: 0; font-weight: 600; color: var(--text-main);">
+                    <span style="color: var(--accent-gold);">Plan:</span> ${vipInfo.plan}
+                </p>
+                <p style="font-size: 0.8rem; margin: 4px 0 0 0; color: var(--text-muted);">
+                    ${vipInfo.expiryText}
+                </p>
+            </div>
+        </div>
+    `;
+    
+    // Si usas iconos dinámicos
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
         const tg = window.Telegram.WebApp;
         tg.expand();
         tg.ready();
@@ -972,7 +1097,8 @@
             { id: 9, title: "Fiber'N Plus", category: "Control Peso", desc: "Limpieza digestiva profunda. Regula el tránsito y evita inflamación.", price: 42, oldPrice: 50, label: "¡Últimas unidades!", img: "https://images.unsplash.com/photo-1576086213369-97a306d36557?w=400" },
             { id: 10, title: "Aloe Beta", category: "Salud General", desc: "Desintoxica, desinflama y cicatriza el organismo por dentro.", price: 26, oldPrice: null, label: "Populares", img: "https://images.unsplash.com/photo-1563483783225-bc3e4334360e?w=400" },
             { id: 11, title: "Dual C Mix", category: "Salud General", desc: "Megadosis de Vitamina C con antioxidantes para una piel radiante.", price: 31, oldPrice: 38, label: "Nuevos", img: "https://images.unsplash.com/photo-1628243349411-e659b85c2b1a?w=400" },
-            { id: 12, title: "Super Mix", category: "Salud General", desc: "Batido completo proteico, ideal para desayunos o cenas rápidas.", price: 48, oldPrice: null, label: null, img: "https://images.unsplash.com/photo-1579954115545-a95591f28bfc?w=400" },
+            { id: 12, title: "Super Mix", category: "Salud General", desc: "Batido completo proteico, ideal para desayunos o cenas rápidas.", price: 48, oldPrice: null,
+             label: null, img: "https://images.unsplash.com/photo-1579954115545-a95591f28bfc?w=400" },
             { id: 13, title: "Aqtúa Supreme", category: "Energía", desc: "Nutrición celular cardiovascular con Coenzima Q10 de alta potencia.", price: 55, oldPrice: 68, label: "¡Últimas unidades!", img: "https://images.unsplash.com/photo-1550572017-edd951b55104?w=400" },
             { id: 14, title: "Shake Omnilife", category: "Control Peso", desc: "Sustituto de comida premium sabor cookies & cream para bajar grasa.", price: 49, oldPrice: 60, label: "Nuevos", img: "https://images.unsplash.com/photo-1553530666-ba11a7da3888?w=400" },
             { id: 15, title: "Fem Plus", category: "Salud General", desc: "Equilibrio hormonal femenino de amplio espectro con extracto de lúpulo.", price: 35, oldPrice: null, label: "Populares", img: "https://images.unsplash.com/photo-1584017911766-d451b3d0e843?w=400" }
