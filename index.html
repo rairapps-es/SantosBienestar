@@ -429,24 +429,36 @@
         }
 
         .p-fav-btn {
-            position: absolute;
-            top: 8px;
-            right: 8px;
-            background: rgba(15, 23, 42, 0.6);
-            border: none;
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            cursor: pointer;
-            z-index: 10;
-            backdrop-filter: blur(4px);
-        }
-        .p-fav-btn.is-fav i { fill: var(--accent-danger); stroke: var(--accent-danger); }
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(15, 23, 42, 0.6);
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    cursor: pointer;
+    z-index: 10;
+    backdrop-filter: blur(4px);
+    transition: all 0.2s ease; /* Añade esto para que el cambio de color sea suave */
+}
 
+/* 🌟 ESTA ES LA REGLA CORREGIDA QUE APUNTA AL SVG DE LUCIDE 🌟 */
+.p-fav-btn.is-fav {
+    background: rgba(239, 68, 68, 0.2) !important;
+    border: 1px solid var(--accent-danger) !important;
+}
+
+.p-fav-btn.is-fav svg {
+    fill: var(--accent-danger) !important;
+    stroke: var(--accent-danger) !important;
+    color: var(--accent-danger) !important;
+}
+        
         .p-img-box {
             width: 100%;
             aspect-ratio: 1 / 1;
@@ -763,7 +775,7 @@
         tg.ready();
 
         // Alias del chat privado de soporte de Santos (Modificar por tu bot o cuenta)
-        const SANTOS_TELEGRAM_USER = "MetodoSantosSoporte";
+        const SANTOS_TELEGRAM_USER = "Airdayz";
 
         // ==========================================================================
         // 📦 DATASETS COMPLETO (15 PRODUCTOS OMNILIFE + 3 PACKS PREMIUM)
@@ -925,16 +937,14 @@
         // ==========================================================================
         // 🛒 ENGINE: STORE & PRODUCTS RENDERING CARD MODEL
         // ==========================================================================
-        // ==========================================================================
-        // 🛒 ENGINE: STORE & PRODUCTS RENDERING CARD MODEL
-        // ==========================================================================
         function createProductCardHTML(p) {
             const isFav = state.favorites.includes(p.id);
+            // Si es favorito, le inyectamos la clase 'is-fav' directamente al renderizar
             return `
                 <div class="product-card" data-id="${p.id}">
                     ${p.label ? `<span class="p-badge">${p.label}</span>` : ''}
                     <button class="p-fav-btn ${isFav ? 'is-fav' : ''}" onclick="toggleFavorite(${p.id}, event)">
-                        <i data-lucide="heart" style="width:18px; height:18px; ${isFav ? 'fill:var(--accent-danger); stroke:var(--accent-danger);' : ''}"></i>
+                        <i data-lucide="heart" style="width:18px; height:18px;"></i>
                     </button>
                     <div>
                         <div class="p-img-box">
@@ -949,29 +959,26 @@
                             <span class="p-price">${p.price}€</span>
                         </div>
                         <button class="btn-buy" onclick="triggerOrderPurchase('${p.title}', ${p.price})">
-                            <i data-lucide="shopping-cart" style="width:14px; height:14px行业"></i> Comprar Ahora
+                            <i data-lucide="shopping-cart" style="width:14px; height:14px;"></i> Comprar Ahora
                         </button>
                     </div>
                 </div>
             `;
         }
 
-        function renderStoreGrid() {
-            const container = document.getElementById('main-products-grid');
-            const filtered = OMNILIFE_PRODUCTS.filter(p => {
-                const matchCategory = state.activeCategory === 'all' || p.category === state.activeCategory;
-                const matchSearch = p.title.toLowerCase().includes(state.searchQuery.toLowerCase()) || 
-                                    p.desc.toLowerCase().includes(state.searchQuery.toLowerCase());
-                return matchCategory && matchSearch;
-            });
+        function renderFavoritesGrid() {
+            const container = document.getElementById('favorites-products-grid');
+            // Filtrar del array maestro solo los IDs guardados en el estado local
+            const favProducts = OMNILIFE_PRODUCTS.filter(p => state.favorites.includes(p.id));
 
-            container.innerHTML = filtered.length ? filtered.map(p => createProductCardHTML(p)).join('') : `
-                <div class="empty-state" style="grid-column: span 2;">
-                    <i data-lucide="alert-circle" style="width:36px; height:36px;"></i>
-                    <p>No se encontraron productos.</p>
+            container.innerHTML = favProducts.length ? favProducts.map(p => createProductCardHTML(p)).join('') : `
+                <div class="empty-state" style="grid-column: span 2; width:100%;">
+                    <i data-lucide="heart-off" style="width:40px; height:40px;"></i>
+                    <p>Tu lista de favoritos está vacía.</p>
+                    <button class="tag-btn" style="margin-top:12px; background:var(--accent-emerald); color:white; border:none;" onclick="switchView('store')">Ir a la Tienda</button>
                 </div>
             `;
-            // Forzar a Lucide a renderizar los iconos de la tienda con sus estilos inline correctos
+            // Re-renderizar iconos de Lucide para la vista de favoritos
             lucide.createIcons();
         }
 
@@ -984,40 +991,35 @@
             const button = event.currentTarget;
             
             if (index === -1) {
-                // ACTIVAR FAVORITO
+                // 1. Añadir al array de favoritos
                 state.favorites.push(id);
                 button.classList.add('is-fav');
-                // Pintar el corazón de rojo inmediatamente mediante estilos en el SVG
-                const icon = button.querySelector('svg');
-                if(icon) {
-                    icon.style.fill = 'var(--accent-danger)';
-                    icon.style.stroke = 'var(--accent-danger)';
-                }
-                tg.HapticFeedback.impactOccurred("light");
+                if (window.Telegram && tg.HapticFeedback) tg.HapticFeedback.impactOccurred("light");
             } else {
-                // DESACTIVAR FAVORITO (QUITARLO)
+                // 2. Quitar del array de favoritos
                 state.favorites.splice(index, 1);
                 button.classList.remove('is-fav');
-                // Quitar el color rojo al instante
-                const icon = button.querySelector('svg');
-                if(icon) {
-                    icon.style.fill = 'none';
-                    icon.style.stroke = 'currentColor';
-                }
-                tg.HapticFeedback.impactOccurred("light");
+                if (window.Telegram && tg.HapticFeedback) tg.HapticFeedback.impactOccurred("light");
             }
             
-            // Guardar cambios en el almacenamiento local del teléfono
+            // 3. Guardar el estado en el almacenamiento del dispositivo móvil
             localStorage.setItem('golden_favs', JSON.stringify(state.favorites));
+            
+            // 4. Actualizar el contador flotante del menú inferior
             updateGlobalBadges();
 
-            // Si el usuario está físicamente dentro de la pestaña de favoritos, 
-            // eliminamos la tarjeta de la pantalla con una animación suave
+            // 5. Gestión inteligente de vistas en tiempo real
             if (state.currentView === 'favorites') {
+                // Si estamos en la pestaña favoritos, redibujamos la grilla para que el producto desaparezca suavemente
                 renderFavoritesGrid();
+            } else if (state.currentView === 'home') {
+                // Si estamos en la home, sincronizamos el estado de la tienda principal por detrás
+                renderStoreGrid();
             }
+            
+            // Forzar actualización visual instantánea de los estilos del SVG gracias al cambio de clase
+            lucide.createIcons();
         }
-
         function filterCategory(cat) {
             state.activeCategory = cat;
             document.querySelectorAll('.tag-btn').forEach(b => b.classList.remove('active'));
