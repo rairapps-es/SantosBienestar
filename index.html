@@ -1057,7 +1057,21 @@ function updateProfileSubscriptionUI() {
     const container = document.getElementById('profile-vip-card-container');
     if (!container) return;
 
-    // Generamos una interfaz visual limpia y adaptada al estado
+    // 1. Variable para guardar el HTML del botón si el usuario NO es VIP
+    let joinButtonHTML = '';
+
+    // 🌟 Si no es VIP (ya sea Regular o Expirado), preparamos el botón de acción
+    if (!vipInfo.isVip) {
+        joinButtonHTML = `
+            <button class="tag-btn" 
+                    style="width: 100%; margin-top: 14px; background: linear-gradient(135deg, var(--accent-gold, #f59e0b), #fb923c); color: white; border: none; font-weight: 700; padding: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 10px rgba(245, 158, 11, 0.2);"
+                    onclick="switchView('subscriptions')"> <i data-lucide="sparkles" style="width:16px; height:16px;"></i>
+                Ver Planes de Suscripción VIP
+            </button>
+        `;
+    }
+
+    // 2. Generamos la tarjeta unificando los datos y el botón condicional
     container.innerHTML = `
         <div class="vip-status-card ${vipInfo.colorClass}" style="padding: 14px; border-radius: var(--radius-md); margin-bottom: 16px; border: 1px solid var(--border-color); background: var(--bg-surface);">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
@@ -1066,16 +1080,17 @@ function updateProfileSubscriptionUI() {
             </div>
             <div style="margin-top: 10px;">
                 <p style="font-size: 0.95rem; margin: 0; font-weight: 600; color: var(--text-main);">
-                    <span style="color: var(--accent-gold);">Plan:</span> ${vipInfo.plan}
+                    <span style="color: var(--accent-gold, #f59e0b);">Plan:</span> ${vipInfo.plan}
                 </p>
                 <p style="font-size: 0.8rem; margin: 4px 0 0 0; color: var(--text-muted);">
                     ${vipInfo.expiryText}
                 </p>
             </div>
+            ${joinButtonHTML}
         </div>
     `;
     
-    // Si usas iconos dinámicos
+    // Volvemos a inicializar Lucide para renderizar el icono de destellos (sparkles) del botón
     if (typeof lucide !== 'undefined') lucide.createIcons();
 }
         const tg = window.Telegram.WebApp;
