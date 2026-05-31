@@ -619,6 +619,7 @@
             <button class="dropdown-item" onclick="switchView('subscription')"><i data-lucide="gem"></i> Suscripción</button>
             <button class="dropdown-item" onclick="switchView('favorites')"><i data-lucide="heart"></i> Favoritos</button>
             <button class="dropdown-item" onclick="switchView('profile')"><i data-lucide="user"></i> Mi Perfil</button>
+            <button class="dropdown-item" onclick="switchView('test')"><i data-lucide="clipboard-check"></i> Test</button>
         </div>
     </header>
 
@@ -742,13 +743,54 @@
         </div>
     </section>
 
+    <section id="view-test" class="view-section">
+        <h2 class="section-title"><i data-lucide="clipboard-check" style="color:var(--accent-gold);"></i>Diagnóstico de Hábitos</h2>
+        
+        <div class="dashboard-card" id="test-welcome">
+            <p style="margin-bottom: 12px; line-height: 1.4;">Responde estas 4 preguntas rápidas para evaluar tu estado actual. El Método Santos te recomendará la suplementación de Omnilife ideal para tus objetivos.</p>
+            <button class="btn-buy" onclick="startHealthTest()">Comenzar Test</button>
+        </div>
+
+        <div id="test-questions-container" class="dashboard-card" style="display: none;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 12px;">
+                <span id="test-step-lbl">Pregunta 1 de 4</span>
+                <span id="test-progress-pct">25%</span>
+            </div>
+            <div style="width: 100%; height: 6px; background: var(--border-color); border-radius: 3px; margin-bottom: 20px; overflow: hidden;">
+                <div id="test-progress-bar" style="width: 25%; height: 100%; background: var(--accent-emerald); transition: width 0.3s ease;"></div>
+            </div>
+
+            <div id="test-current-question-box">
+                <h4 id="test-question-title" style="margin-bottom: 16px; font-size: 1.1rem;">¿Cuál es tu principal objetivo de salud en este momento?</h4>
+                <div id="test-options-box" style="display: flex; flex-direction: column; gap: 10px;">
+                    </div>
+            </div>
+        </div>
+
+        <div id="test-results-container" class="dashboard-card" style="display: none; text-align: center;">
+            <i data-lucide="trophy" style="width: 48px; height: 48px; color: var(--accent-gold); margin: 0 auto 12px;"></i>
+            <h3 style="margin-bottom: 8px;">¡Test Completado con Éxito!</h3>
+            <p id="test-diagnosis-text" style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 16px;"></p>
+            
+            <div class="calc-result-box" style="margin-bottom: 16px;">
+                <p style="font-size: 0.8rem; color: var(--text-muted);">Tu Suplemento Estrella asignado:</p>
+                <h4 id="test-recommended-product-title" style="font-size: 1.2rem; color: var(--accent-gold); margin: 6px 0;"></h4>
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+                <button class="tag-btn" style="flex: 1; background: var(--accent-emerald); color: white; border: none;" onclick="switchView('store')">Ir a comprarlo</button>
+                <button class="tag-btn" style="flex: 1;" onclick="resetHealthTest()">Repetir Test</button>
+            </div>
+        </div>
+    </section>
     <nav class="bottom-nav">
         <button class="nav-tab active" id="tab-home" onclick="switchView('home')">
             <i data-lucide="home"></i><span>Inicio</span>
         </button>
         <button class="nav-tab" id="tab-store" onclick="switchView('store')">
             <i data-lucide="shopping-bag"></i><span>Tienda</span>
-        </button>
+        </bu
+            tton>
         <button class="nav-tab" id="tab-subscription" onclick="switchView('subscription')">
             <i data-lucide="gem"></i><span>Planes</span>
         </button>
@@ -809,6 +851,141 @@
             }
         });
 
+        // ==========================================================================
+        // 📋 ENGINE: NATIVE HEALTH TEST SYSTEM (METODO SANTOS)
+        // ==========================================================================
+        const HEALTH_QUESTIONS = [
+            {
+                id: "objetivo",
+                question: "¿Cuál es tu principal objetivo de salud en este momento?",
+                options: [
+                    { text: "Tener más energía y vitalidad diaria", val: "Energía" },
+                    { text: "Controlar mi peso y quemar grasa", val: "Control Peso" },
+                    { text: "Fortalecer defensas y salud general", val: "Salud General" }
+                ]
+            },
+            {
+                id: "energia",
+                question: "Al mediodía o por la tarde, ¿cómo sientes tus niveles de energía?",
+                options: [
+                    { text: "Muy bajos, arrastro fatiga y me da sueño", val: "alta-fatiga" },
+                    { text: "Normales, pero dependo mucho del café", val: "media" },
+                    { text: "Excelentes, me mantengo activo todo el día", val: "optimo" }
+                ]
+            },
+            {
+                id: "digesticion",
+                question: "¿Sufres de pesadez estomacal, inflamación o tránsito lento?",
+                options: [
+                    { text: "Sí, de forma muy frecuente", val: "mala-dig" },
+                    { text: "Ocasionalmente según lo que coma", val: "media-dig" },
+                    { text: "No, mi digestión es excelente", val: "buena-dig" }
+                ]
+            },
+            {
+                id: "deporte",
+                question: "¿Con qué frecuencia realizas actividad física a la semana?",
+                options: [
+                    { text: "Sedentario (0 a 1 día)", val: "sedentario" },
+                    { text: "Moderado (2 a 3 días)", val: "moderado" },
+                    { text: "Activo / Atleta (Más de 4 días)", val: "atleta" }
+                ]
+            }
+        ];
+
+        let testState = {
+            currentStep: 0,
+            answers: {}
+        };
+
+        function startHealthTest() {
+            document.getElementById('test-welcome').style.display = 'none';
+            document.getElementById('test-results-container').style.display = 'none';
+            document.getElementById('test-questions-container').style.display = 'block';
+            testState.currentStep = 0;
+            testState.answers = {};
+            renderTestQuestion();
+        }
+
+        function renderTestQuestion() {
+            const currentQ = HEALTH_QUESTIONS[testState.currentStep];
+            
+            // Actualizar textos de progreso superiores
+            const totalQ = HEALTH_QUESTIONS.length;
+            const pct = Math.round(((testState.currentStep + 1) / totalQ) * 100);
+            document.getElementById('test-step-lbl').innerText = `Pregunta ${testState.currentStep + 1} de ${totalQ}`;
+            document.getElementById('test-progress-pct').innerText = `${pct}%`;
+            document.getElementById('test-progress-bar').style.width = `${pct}%`;
+
+            // Cargar Título de pregunta
+            document.getElementById('test-question-title').innerText = currentQ.question;
+
+            // Cargar botones de opciones
+            const optionsBox = document.getElementById('test-options-box');
+            optionsBox.innerHTML = currentQ.options.map(opt => `
+                <button class="tag-btn" style="text-align:left; padding:14px; width:100%; white-space:normal; border-color:var(--border-color); color:var(--text-main);" onclick="selectTestOption('${currentQ.id}', '${opt.val}')">
+                    ${opt.text}
+                </button>
+            `).join('');
+        }
+
+        function selectTestOption(questionId, value) {
+            // Guardar respuesta del usuario
+            testState.answers[questionId] = value;
+            
+            if (window.Telegram && tg.HapticFeedback) tg.HapticFeedback.impactOccurred("light");
+
+            // Avanzar o terminar
+            if (testState.currentStep < HEALTH_QUESTIONS.length - 1) {
+                testState.currentStep++;
+                renderTestQuestion();
+            } else {
+                processTestResults();
+            }
+        }
+
+        function processTestResults() {
+            document.getElementById('test-questions-container').style.display = 'none';
+            document.getElementById('test-results-container').style.display = 'block';
+
+            const obj = testState.answers['objetivo'];
+            const nrg = testState.answers['energia'];
+            const dig = testState.answers['digesticion'];
+
+            let diagnosis = "";
+            let recommendedProd = null;
+
+            // Algoritmo de recomendación inteligente en base a lo que respondió
+            if (obj === "Energía" || nrg === "alta-fatiga") {
+                diagnosis = "Tus niveles de energía necesitan un empuje celular inmediato. Para mitigar el cansancio y mejorar el enfoque sin bajones, tu cuerpo responderá increíblemente al aporte de vitaminas del complejo B.";
+                recommendedProd = OMNILIFE_PRODUCTS[0]; // Magnus Supreme
+            } else if (obj === "Control Peso" || dig === "mala-dig") {
+                diagnosis = "Tu metabolismo requiere optimizar la asimilación de nutrientes y acelerar la termogénesis. Una limpieza del sistema digestivo te ayudará a desinflamar de forma notable.";
+                recommendedProd = OMNILIFE_PRODUCTS[4]; // Teatino Limón
+            } else {
+                diagnosis = "Tu enfoque principal es preventivo y estructural. Para mantener tus defensas al 100% y acelerar la regeneración de tus músculos y tejidos, necesitas nutrientes micelizados.";
+                recommendedProd = OMNILIFE_PRODUCTS[2]; // Power Maker
+            }
+
+            // Inyectar diagnóstico en pantalla
+            document.getElementById('test-diagnosis-text').innerText = diagnosis;
+            document.getElementById('test-recommended-product-title').innerText = recommendedProd.title;
+
+            // Guardar el resultado en el LocalStorage global para que afecte a otras partes de la app si se desea
+            localStorage.setItem('santos_test_result', JSON.stringify({
+                product: recommendedProd.title,
+                date: new Date().toLocaleDateString()
+            }));
+
+            if (window.Telegram && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
+        function resetHealthTest() {
+            document.getElementById('test-results-container').style.display = 'none';
+            document.getElementById('test-welcome').style.display = 'block';
+        }
+        
         function syncTelegramUser() {
             const user = tg.initDataUnsafe?.user;
             const username = user?.username ? `@${user.username}` : "@UsuarioGolden";
@@ -842,24 +1019,25 @@
         }
 
         function switchView(viewId) {
-            document.getElementById('dropdown-box').classList.remove('open');
-            document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
-            document.getElementById(`view-${viewId}`).classList.add('active');
+    document.getElementById('dropdown-box').classList.remove('open');
+    document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
+    document.getElementById(`view-${viewId}`).classList.add('active');
 
-            document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
-            const activeTab = document.getElementById(`tab-${viewId}`);
-            if (activeTab) activeTab.classList.add('active');
+    document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
+    const activeTab = document.getElementById(`tab-${viewId}`);
+    if (activeTab) activeTab.classList.add('active');
 
-            state.currentView = viewId;
+    state.currentView = viewId;
 
-            if (viewId === 'favorites') renderFavoritesGrid();
-            if (viewId === 'store') renderStoreGrid();
-            if (viewId === 'profile') {
-                document.getElementById('stat-streak').innerText = `${state.streak} Días`;
-                document.getElementById('stat-favs').innerText = `${state.favorites.length} Items`;
-            }
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
+    if (viewId === 'favorites') renderFavoritesGrid();
+    if (viewId === 'store') renderStoreGrid();
+    if (viewId === 'test') resetHealthTest(); // 📋 Inicializa el test nativo al entrar
+    if (viewId === 'profile') {
+        document.getElementById('stat-streak').innerText = `${state.streak} Días`;
+        document.getElementById('stat-favs').innerText = `${state.favorites.length} Items`;
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
 
         function renderCarousel(type, productsList) {
             const track = document.getElementById(`track-${type}`);
