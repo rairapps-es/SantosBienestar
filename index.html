@@ -914,13 +914,16 @@
         // ==========================================================================
         // 🛒 ENGINE: STORE & PRODUCTS RENDERING CARD MODEL
         // ==========================================================================
+        // ==========================================================================
+        // 🛒 ENGINE: STORE & PRODUCTS RENDERING CARD MODEL
+        // ==========================================================================
         function createProductCardHTML(p) {
             const isFav = state.favorites.includes(p.id);
             return `
-                <div class="product-card">
+                <div class="product-card" data-id="${p.id}">
                     ${p.label ? `<span class="p-badge">${p.label}</span>` : ''}
                     <button class="p-fav-btn ${isFav ? 'is-fav' : ''}" onclick="toggleFavorite(${p.id}, event)">
-                        <i data-lucide="heart" style="width:18px; height:18px;"></i>
+                        <i data-lucide="heart" style="width:18px; height:18px; ${isFav ? 'fill:var(--accent-danger); stroke:var(--accent-danger);' : ''}"></i>
                     </button>
                     <div>
                         <div class="p-img-box">
@@ -935,7 +938,7 @@
                             <span class="p-price">${p.price}€</span>
                         </div>
                         <button class="btn-buy" onclick="triggerOrderPurchase('${p.title}', ${p.price})">
-                            <i data-lucide="shopping-cart" style="width:14px; height:14px;"></i> Comprar Ahora
+                            <i data-lucide="shopping-cart" style="width:14px; height:14px行业"></i> Comprar Ahora
                         </button>
                     </div>
                 </div>
@@ -957,21 +960,51 @@
                     <p>No se encontraron productos.</p>
                 </div>
             `;
+            // Forzar a Lucide a renderizar los iconos de la tienda con sus estilos inline correctos
             lucide.createIcons();
         }
 
-        function renderFavoritesGrid() {
-            const container = document.getElementById('favorites-products-grid');
-            const favProducts = OMNILIFE_PRODUCTS.filter(p => state.favorites.includes(p.id));
+        // ==========================================================================
+        // 💾 INTERACTION, FAVORITES CORE & LOCALSTORAGE MOTOR
+        // ==========================================================================
+        function toggleFavorite(id, event) {
+            event.stopPropagation();
+            const index = state.favorites.indexOf(id);
+            const button = event.currentTarget;
+            
+            if (index === -1) {
+                // ACTIVAR FAVORITO
+                state.favorites.push(id);
+                button.classList.add('is-fav');
+                // Pintar el corazón de rojo inmediatamente mediante estilos en el SVG
+                const icon = button.querySelector('svg');
+                if(icon) {
+                    icon.style.fill = 'var(--accent-danger)';
+                    icon.style.stroke = 'var(--accent-danger)';
+                }
+                tg.HapticFeedback.impactOccurred("light");
+            } else {
+                // DESACTIVAR FAVORITO (QUITARLO)
+                state.favorites.splice(index, 1);
+                button.classList.remove('is-fav');
+                // Quitar el color rojo al instante
+                const icon = button.querySelector('svg');
+                if(icon) {
+                    icon.style.fill = 'none';
+                    icon.style.stroke = 'currentColor';
+                }
+                tg.HapticFeedback.impactOccurred("light");
+            }
+            
+            // Guardar cambios en el almacenamiento local del teléfono
+            localStorage.setItem('golden_favs', JSON.stringify(state.favorites));
+            updateGlobalBadges();
 
-            container.innerHTML = favProducts.length ? favProducts.map(p => createProductCardHTML(p)).join('') : `
-                <div class="empty-state" style="grid-column: span 2; width:100%;">
-                    <i data-lucide="heart-off" style="width:40px; height:40px;"></i>
-                    <p>Tu lista de favoritos está vacía.</p>
-                    <button class="tag-btn" style="margin-top:12px; background:var(--accent-emerald); color:white;" onclick="switchView('store')">Ir a la Tienda</button>
-                </div>
-            `;
-            lucide.createIcons();
+            // Si el usuario está físicamente dentro de la pestaña de favoritos, 
+            // eliminamos la tarjeta de la pantalla con una animación suave
+            if (state.currentView === 'favorites') {
+                renderFavoritesGrid();
+            }
         }
 
         function filterCategory(cat) {
