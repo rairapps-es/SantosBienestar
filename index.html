@@ -619,7 +619,7 @@
             <button class="dropdown-item" onclick="switchView('subscription')"><i data-lucide="gem"></i> Suscripción</button>
             <button class="dropdown-item" onclick="switchView('favorites')"><i data-lucide="heart"></i> Favoritos</button>
             <button class="dropdown-item" onclick="switchView('profile')"><i data-lucide="user"></i> Mi Perfil</button>
-            <button class="dropdown-item" onclick="switchView('test')"><i data-lucide="clipboard-check"></i> Test</button>
+            <button class="dropdown-item" onclick="switchView('test')"><i data-lucide="clipboard-check"></i> Hacer Test</button>
         </div>
     </header>
 
@@ -838,7 +838,8 @@
         balance: 100, 
         role: "user", 
         range: 1,
-        pointsProgress: 25,
+        // Lee los puntos guardados o empieza en 0 si es un nuevo usuario
+        pointsProgress: parseInt(localStorage.getItem('golden_points')) || 0,
         seed: "carlos",
         isVipMember: false, 
         equipped: { clothing: "", glasses: "" }
@@ -849,7 +850,7 @@
     purchasedItems: [],
     adminFilterOnly: false,
 
-    // 🌟 NUEVAS PROPIEDADES INTEGRADAS PARA LOS HÁBITOS DE SANTOS:
+    // PROPIEDADES INTEGRADAS PARA LOS HÁBITOS DE SANTOS:
     streak: parseInt(localStorage.getItem('golden_streak')) || 0,
     habitsCheck: JSON.parse(localStorage.getItem('golden_habits')) || {
         date: '',
@@ -859,23 +860,62 @@
         completed: false // Bloqueador diario activo
     },
 
-    // 🔍 VARIABLES ESENCIALES PARA QUE FUNCIONE LA TIENDA (FALTABAN AQUÍ):
-    activeCategory: 'all',  // Controla qué categoría está seleccionada (por defecto todas)
-    searchQuery: ''         // Controla el texto escrito en el buscador (por defecto vacío)
+    // VARIABLES ESENCIALES PARA LA TIENDA Y FILTROS:
+    activeCategory: 'all',  
+    searchQuery: ''         
 };
 
-        document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", () => {
+    // 1. Sincronizar datos de Telegram
     syncTelegramUser();
-    checkHabitDateRefresh(); // 1. Verifica la fecha del sistema
-    updateHabitCheckboxesUI(); // 🌟 Añade esto aquí para pintar los checkboxes al arrancar
+    
+    // 2. Control del estado de hábitos y renderizado de checkboxes
+    checkHabitDateRefresh(); 
+    updateHabitCheckboxesUI(); 
+    
+    // 🌟 3. Sincronizar el marcador visual de puntos al arrancar la app
+    const pointsEl = document.getElementById('user-points-num');
+    if (pointsEl) {
+        pointsEl.innerText = state.user.pointsProgress;
+    }
+    
+    // 4. Renderizar vistas, tienda y cálculos
     renderAllViews();
-    renderStoreGrid(); // Forzado de arranque
+    renderStoreGrid(); 
     calculateHealthMetrics();
+    
+    // 5. Inicializar iconos de Lucide si la librería está cargada
     if (typeof lucide !== 'undefined') {
         lucide.createIcons();
     }
 });
 
+        function addPoints(amount, reason) {
+    // 1. Sumamos los puntos al estado global
+    state.user.pointsProgress += amount;
+    
+    // 2. Lo guardamos de forma persistente en el LocalStorage
+    localStorage.setItem('golden_points', state.user.pointsProgress);
+    
+    // 3. Actualizamos el elemento visual en la pantalla
+    const pointsEl = document.getElementById('user-points-num');
+    if (pointsEl) {
+        pointsEl.innerText = state.user.pointsProgress;
+    }
+
+    // 4. Feedback premium dentro de Telegram (vibración ligera)
+    if (window.Telegram && tg.HapticFeedback) {
+        tg.HapticFeedback.impactOccurred("light");
+    }
+
+    // 5. Registramos en los logs del sistema (opcional, ya que tienes systemLogs en tu state)
+    if (state.systemLogs) {
+        state.systemLogs.push(`[${new Date().toLocaleTimeString()}] +${amount} pts por ${reason}`);
+    }
+    
+    console.log(`🎉 +${amount} puntos añadidos por: ${reason}. Total: ${state.user.pointsProgress}`);
+}
+        
         // ==========================================================================
         // 📋 ENGINE: NATIVE HEALTH TEST SYSTEM (METODO SANTOS)
         // ==========================================================================
@@ -1266,22 +1306,52 @@
         }
 
         function toggleHabit(key) {
-            state.habitsCheck[key] = !state.habitsCheck[key];
-            localStorage.setItem('golden_habits', JSON.stringify(state.habitsCheck));
-            updateHabitCheckboxesUI();
+    // 1. 🛡️ FILTRO DE BLOQUEO: Si el día ya está completado, congelamos la función
+    if (state.habitsCheck.completed) {
+        alert("🔒 Ya completaste tus hábitos de hoy. ¡Vuelve mañana para seguir sumando!");
+        return;
+    }
 
-            const allDone = state.habitsCheck.water && state.habitsCheck.walk && state.habitsCheck.supplement;
-            if (allDone) {
-                state.streak += 1;
-                localStorage.setItem('golden_streak', state.streak);
-                document.getElementById('streak-num').innerText = state.streak;
-                if (window.Telegram && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
-                alert("🎉 ¡Increíble! Has completado tus hábitos de hoy. Sigue así.");
-            } else {
-                if (window.Telegram && tg.HapticFeedback) tg.HapticFeedback.impactOccurred("light");
-            }
+    // 2. Alternamos el estado del hábito seleccionado
+    state.habitsCheck[key] = !state.habitsCheck[key];
+    localStorage.setItem('golden_habits', JSON.stringify(state.habitsCheck));
+    updateHabitCheckboxesUI();
+
+    // 3. Comprobamos si los tres hábitos están activos (true)
+    const allDone = state.habitsCheck.water && state.habitsCheck.walk && state.habitsCheck.supplement;
+    
+    if (allDone) {
+        // 4. Marcar como completado el día en el estado y persistencia para bloquear futuros clics
+        state.habitsCheck.completed = true;
+        localStorage.setItem('golden_habits', JSON.stringify(state.habitsCheck));
+
+        // 5. Gestión de Racha: Sumamos 1 día a la racha actual
+        state.streak += 1;
+        localStorage.setItem('golden_streak', state.streak);
+        const streakEl = document.getElementById('streak-num');
+        if (streakEl) streakEl.innerText = state.streak;
+
+        // 6. 🌟 GAMIFICACIÓN: Sumamos 50 puntos al usuario por completar el día
+        state.user.pointsProgress += 50;
+        localStorage.setItem('golden_points', state.user.pointsProgress);
+        const pointsEl = document.getElementById('user-points-num');
+        if (pointsEl) pointsEl.innerText = state.user.pointsProgress;
+
+        // 7. Feedback de Telegram (Vibración de éxito) y aviso en pantalla
+        if (window.Telegram && tg.HapticFeedback) {
+            tg.HapticFeedback.notificationOccurred("success");
         }
-
+        alert("🎉 ¡Increíble! Has completado tus hábitos, sumas +1 día de racha y ganas 50 puntos. ¡Mañana más!");
+        
+        // Volvemos a pintar para que los elementos adquieran los estilos visuales de bloqueo instantáneamente
+        updateHabitCheckboxesUI();
+    } else {
+        // Vibración sutil si solo está marcando o desmarcando una tarea sin terminar el combo
+        if (window.Telegram && tg.HapticFeedback) {
+            tg.HapticFeedback.impactOccurred("light");
+        }
+    }
+}
         function updateHabitCheckboxesUI() {
             const map = { water: 'chk-water', walk: 'chk-walk', supplement: 'chk-supplement' };
             for (let key in map) {
