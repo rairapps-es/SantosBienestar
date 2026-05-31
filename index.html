@@ -1752,7 +1752,15 @@ function toggleHabit(key) {
         const pointsEl = document.getElementById('user-points-num');
         if (pointsEl) pointsEl.innerText = state.user.pointsProgress;
         
+        // 📳 Vibración de éxito en Telegram
         if (window.Telegram && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
+        
+        // 🎉 ¡BOOM! LANZAMOS EL CONFETI AQUÍ 
+        // Se ejecuta justo antes del alert para que se vea la explosión flotando por detrás
+        if (typeof lanzarConfetiCelebracion === 'function') {
+            lanzarConfetiCelebracion();
+        }
+
         alert("🎉 ¡Increíble! Has completado tus hábitos de hoy, ganas 50 puntos y salvas tu racha. Sistema bloqueado hasta mañana.");
         
         updateHabitCheckboxesUI();
@@ -1994,7 +2002,18 @@ function renderSubscriptionCards() {
     // Re-renderizar iconos de Lucide (por si se pinta el check-circle dinámico)
     if (typeof lucide !== 'undefined') lucide.createIcons();
 }
-        
+
+        function lanzarConfetiCelebracion() {
+    if (typeof confetti !== 'undefined') {
+        // Disparo lateral izquierdo
+        confetti({ particleCount: 100, spread: 70, origin: { x: 0, y: 0.8 } });
+        // Disparo lateral derecho
+        setTimeout(() => {
+            confetti({ particleCount: 100, spread: 70, origin: { x: 1, y: 0.8 } });
+        }, 200);
+    }
+}
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 </body>
 </html>
