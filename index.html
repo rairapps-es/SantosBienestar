@@ -1151,7 +1151,6 @@ function updateProfileSubscriptionUI() {
         equipped: { clothing: "", glasses: "" }
     },
     
-    // 🌟 CORRECCIÓN AQUÍ: Carga los favoritos del LocalStorage al arrancar
     favorites: JSON.parse(localStorage.getItem('golden_favs')) || [], 
     
     history: [], 
@@ -1159,7 +1158,7 @@ function updateProfileSubscriptionUI() {
     purchasedItems: [],
     adminFilterOnly: false,
 
-    // PROPIEDADES INTEGRADAS PARA LOS HÁBITOS DE SANTOS:
+    // PROPIEDADES DE HÁBITOS:
     streak: parseInt(localStorage.getItem('golden_streak')) || 0,
     habitsCheck: JSON.parse(localStorage.getItem('golden_habits')) || {
         date: '',
@@ -1169,7 +1168,11 @@ function updateProfileSubscriptionUI() {
         completed: false 
     },
 
-    // VARIABLES ESENCIALES PARA LA TIENDA Y FILTROS:
+    // 🌟 NUEVO Y CORREGIDO: Persistencia para la calculadora de Santos
+    userWeight: parseInt(localStorage.getItem('santos_weight')) || 70,       
+    targetWater: localStorage.getItem('santos_water') || "2.5",
+
+    // VARIABLES DE TIENDA Y FILTROS:
     activeCategory: 'all',  
     searchQuery: ''         
 };
@@ -1182,17 +1185,27 @@ document.addEventListener("DOMContentLoaded", () => {
     checkHabitDateRefresh(); 
     updateHabitCheckboxesUI(); 
     
-    // 🌟 3. Sincronizar el marcador visual de puntos al arrancar la app
+    // 3. Sincronizar el marcador visual de puntos al arrancar la app
     const pointsEl = document.getElementById('user-points-num');
     if (pointsEl) {
         pointsEl.innerText = state.user.pointsProgress;
     }
     
+    // 🌟 CORRECCIÓN MAESTRA: Sincronizar el slider HTML con los datos guardados antes de calcular
+    const weightSlider = document.getElementById('calc-weight-range');
+    const weightLabel = document.getElementById('weight-lbl');
+    if (weightSlider && state.userWeight) {
+        weightSlider.value = state.userWeight;
+    }
+    if (weightLabel && state.userWeight) {
+        weightLabel.innerText = `${state.userWeight} kg`;
+    }
+
     // 4. Renderizar vistas, tienda, favoritos y cálculos
     renderAllViews();
     renderStoreGrid(); 
-    renderFavoritesGrid(); // 🌟 ¡Añadido aquí! Carga tus productos favoritos al iniciar la app
-    calculateHealthMetrics();
+    renderFavoritesGrid(); 
+    calculateHealthMetrics(); // Ahora este cálculo leerá el peso correcto guardado
     
     // 5. Inicializar iconos de Lucide si la librería está cargada
     if (typeof lucide !== 'undefined') {
@@ -1434,7 +1447,6 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById('dropdown-box').classList.remove('open');
     document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
     
-    // Forzamos compatibilidad por si acaso
     let targetId = viewId;
     if (viewId === 'subscriptions') targetId = 'subscription';
 
@@ -1447,8 +1459,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     state.currentView = targetId;
 
-    // 💧 ¡SINCRONIZACIÓN MAESTRA DEL AGUA EN CUALQUIER VISTA!
-    // Al dejarlo aquí fuera, nos aseguramos de que el texto del hábito se mantenga actualizado siempre
+    // 💧 1. SINCRONIZACIÓN DEL TEXTO DEL HÁBITO (AGUA)
     if (state.targetWater) {
         const waterHabitLabel = document.getElementById('habit-water-text');
         if (waterHabitLabel) {
@@ -1456,25 +1467,36 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    // ⚖️ 2. CORRECCIÓN CRÍTICA: RESTAURAR EL VALOR DEL PESO EN EL SLIDER
+    // Si el usuario ya movió el peso antes, lo volvemos a poner en su sitio al cambiar de pestaña
+    if (state.userWeight) {
+        const weightSlider = document.getElementById('calc-weight-range');
+        const weightLabel = document.getElementById('weight-lbl');
+        
+        if (weightSlider) weightSlider.value = state.userWeight;
+        if (weightLabel) weightLabel.innerText = `${state.userWeight} kg`;
+        
+        // Ejecutamos el cálculo una vez para que se pinte el producto recomendado correcto
+        if (typeof calculateHealthMetrics === 'function') {
+            calculateHealthMetrics();
+        }
+    }
+
     // 🔄 Inicialización y renderizado dinámico según la pestaña activa
     if (targetId === 'favorites') renderFavoritesGrid();
     if (targetId === 'store') renderStoreGrid();
-    if (targetId === 'test') resetHealthTest(); // 📋 Inicializa el test nativo al entrar
+    if (targetId === 'test') resetHealthTest();
     
-    // 🌟 GESTIÓN DE LA VISTA DE SUSCRIPCIONES (Soporta singular y plural)
     if (targetId === 'subscription' || targetId === 'subscriptions') { 
-        renderSubscriptionCards(); // 💎 Renderiza las tarjetas evaluando si está bloqueada o activa
+        renderSubscriptionCards(); 
     }
     
-    // 👤 GESTIÓN DE LA VISTA DE PERFIL
     if (targetId === 'profile' || targetId === 'dashboard' || targetId === 'home') {
-        // Actualizar estadísticas básicas
         const streakEl = document.getElementById('stat-streak');
         const favsEl = document.getElementById('stat-favs');
         if (streakEl) streakEl.innerText = `${state.streak} Días`;
         if (favsEl) favsEl.innerText = `${state.favorites.length} Items`;
         
-        // 💎 Actualiza la tarjeta de estado VIP del perfil
         if (typeof updateProfileSubscriptionUI === 'function') {
             updateProfileSubscriptionUI();
         }
