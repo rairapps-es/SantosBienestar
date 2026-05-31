@@ -1432,26 +1432,32 @@ document.addEventListener("DOMContentLoaded", () => {
         function switchView(viewId) {
     document.getElementById('dropdown-box').classList.remove('open');
     document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
-    document.getElementById(`view-${viewId}`).classList.add('active');
+    
+    // Forzamos compatibilidad por si acaso
+    let targetId = viewId;
+    if (viewId === 'subscriptions') targetId = 'subscription';
+
+    const targetView = document.getElementById(`view-${targetId}`);
+    if (targetView) targetView.classList.add('active');
 
     document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
-    const activeTab = document.getElementById(`tab-${viewId}`);
+    const activeTab = document.getElementById(`tab-${targetId}`);
     if (activeTab) activeTab.classList.add('active');
 
-    state.currentView = viewId;
+    state.currentView = targetId;
 
     // 🔄 Inicialización y renderizado dinámico según la pestaña activa
-    if (viewId === 'favorites') renderFavoritesGrid();
-    if (viewId === 'store') renderStoreGrid();
-    if (viewId === 'test') resetHealthTest(); // 📋 Inicializa el test nativo al entrar
+    if (targetId === 'favorites') renderFavoritesGrid();
+    if (targetId === 'store') renderStoreGrid();
+    if (targetId === 'test') resetHealthTest(); // 📋 Inicializa el test nativo al entrar
     
-    // 🌟 GESTIÓN DE LA VISTA DE SUSCRIPCIONES
-    if (viewId === 'subscription') { 
+    // 🌟 GESTIÓN DE LA VISTA DE SUSCRIPCIONES (Soporta singular y plural)
+    if (targetId === 'subscription' || targetId === 'subscriptions') { 
         renderSubscriptionCards(); // 💎 Renderiza las tarjetas evaluando si está bloqueada o activa
     }
     
     // 👤 GESTIÓN DE LA VISTA DE PERFIL
-    if (viewId === 'profile') {
+    if (targetId === 'profile') {
         document.getElementById('stat-streak').innerText = `${state.streak} Días`;
         document.getElementById('stat-favs').innerText = `${state.favorites.length} Items`;
         
@@ -1849,15 +1855,24 @@ function updateHabitCheckboxesUI() {
         /**
  * Renderiza dinámicamente las tarjetas de suscripción evaluando el estado VIP
  */
- function renderSubscriptionCards() {
-    const container = document.getElementById('subscriptions-grid-container');
-    if (!container) return;
+ 
+function renderSubscriptionCards() {
+    // 🌟 CORRECCIÓN CRÍTICA: Cambiado al ID exacto de tu HTML
+    const container = document.getElementById('subscription-container');
+    if (!container) {
+        console.error("❌ No se encontró el contenedor #subscription-container en el HTML");
+        return;
+    }
 
+    // 1. Extraemos los datos procesados de la función de verificación de usuario
     const vipInfo = checkUserVipStatus(); 
-    const activePlans = vipInfo.userPlans || []; // Guarda los IDs activos (ej: ["pack-energia", "pack-peso"])
+    const activePlans = vipInfo.userPlans || []; // Trae los IDs activos (ej: ["pack-energia", "pack-peso"])
 
+    // 2. Mapeamos las tarjetas del array global OMNILIFE_SUBSCRIPTIONS
     container.innerHTML = OMNILIFE_SUBSCRIPTIONS.map(pack => {
-        // 🌟 CONEXIÓN CRÍTICA POR ID: Evaluamos si el ID de esta tarjeta está en el perfil del usuario
+        
+        // 🌟 CONEXIÓN POR ID VINCULADA:
+        // Evaluamos matemáticamente si el usuario es VIP y si el ID de esta tarjeta está en su perfil
         const isThisPackActive = vipInfo.isVip && activePlans.includes(pack.id);
 
         let cardStyle = "";
@@ -1865,7 +1880,7 @@ function updateHabitCheckboxesUI() {
         let buttonHTML = "";
 
         if (isThisPackActive) {
-            // Diseño Premium Tarjeta Bloqueada/Activa
+            // 💎 DISEÑO TARJETA ACTIVA (Dorado resplandeciente y bloqueado)
             cardStyle = `border: 2px solid var(--accent-gold, #f59e0b); box-shadow: 0 0 20px rgba(245, 158, 11, 0.2); position: relative; overflow: hidden;`;
             badgeHTML = `
                 <div style="position: absolute; top: 12px; right: 12px; background: linear-gradient(135deg, #f59e0b, #fb923c); color: white; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 800; display: flex; align-items: center; gap: 4px; z-index: 10;">
@@ -1874,11 +1889,11 @@ function updateHabitCheckboxesUI() {
             `;
             buttonHTML = `
                 <button class="tag-btn" style="width: 100%; padding: 12px; background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px dashed var(--border-color); cursor: not-allowed; font-weight: bold;" disabled>
-                    🔒 Suscripción Activa (${vipInfo.expiryText.replace("Expira el: ", "")})
+                    🔒 Suscripción Activa (${vipInfo.expiryText.replace("Expira el: ", "").replace("Finalizó el: ", "")})
                 </button>
             `;
         } else {
-            // Diseño Tarjeta Normal para Comprar
+            // 🛒 DISEÑO TARJETA NORMAL (Verde para comprar)
             cardStyle = pack.gold ? `border: 1px solid rgba(245, 158, 11, 0.4); position: relative;` : `border: 1px solid var(--border-color); position: relative;`;
             if (pack.gold) {
                 badgeHTML = `
@@ -1918,8 +1933,10 @@ function updateHabitCheckboxesUI() {
         `;
     }).join('');
 
+    // Re-renderizar iconos de Lucide (por si se pinta el check-circle dinámico)
     if (typeof lucide !== 'undefined') lucide.createIcons();
 }
+        
     </script>
 </body>
 </html>
