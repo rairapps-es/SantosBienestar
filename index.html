@@ -918,20 +918,23 @@
         </div>
 
         <div id="test-results-container" class="dashboard-card" style="display: none; text-align: center;">
-            <i data-lucide="trophy" style="width: 48px; height: 48px; color: var(--accent-gold); margin: 0 auto 12px;"></i>
-            <h3 style="margin-bottom: 8px;">¡Test Completado con Éxito!</h3>
-            <p id="test-diagnosis-text" style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 16px;"></p>
-            
-            <div class="calc-result-box" style="margin-bottom: 16px;">
-                <p style="font-size: 0.8rem; color: var(--text-muted);">Tu Suplemento Estrella asignado:</p>
-                <h4 id="test-recommended-product-title" style="font-size: 1.2rem; color: var(--accent-gold); margin: 6px 0;"></h4>
-            </div>
+    <i data-lucide="trophy" style="width: 48px; height: 48px; color: var(--accent-gold); margin: 0 auto 12px;"></i>
+    <h3 style="margin-bottom: 8px;">¡Test Completado con Éxito!</h3>
+    
+    <!-- Diagnóstico personalizado -->
+    <p id="test-diagnosis-text" style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 16px; padding: 0 10px;"></p>
+    
+    <!-- 🌟 CONTENEDOR DE LA TARJETA DINÁMICA: Aquí se inyectará la tarjeta idéntica a la tienda -->
+    <div id="test-recommended-product-box" style="width: 100%; max-width: 320px; margin: 0 auto 20px; text-align: left;">
+        <!-- Se rellena automáticamente desde JavaScript con imagen, precio, favoritos y pedir por Telegram -->
+    </div>
 
-            <div style="display: flex; gap: 10px;">
-                <button class="tag-btn" style="flex: 1; background: var(--accent-emerald); color: white; border: none;" onclick="switchView('store')">Ir a comprarlo</button>
-                <button class="tag-btn" style="flex: 1;" onclick="resetHealthTest()">Repetir Test</button>
-            </div>
-        </div>
+    <!-- Botones de navegación inferiores -->
+    <div style="display: flex; gap: 10px; margin-top: 15px;">
+        <button class="tag-btn" style="flex: 1;" onclick="switchView('dashboard')">Volver al Inicio</button>
+        <button class="tag-btn" style="flex: 1; border-color: var(--border-color);" onclick="resetHealthTest()">Repetir Test</button>
+    </div>
+</div>
     </section>
     <nav class="bottom-nav">
         <button class="nav-tab active" id="tab-home" onclick="switchView('home')">
@@ -1163,46 +1166,83 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         function processTestResults() {
-            document.getElementById('test-questions-container').style.display = 'none';
-            document.getElementById('test-results-container').style.display = 'block';
+    document.getElementById('test-questions-container').style.display = 'none';
+    document.getElementById('test-results-container').style.display = 'block';
 
-            const obj = testState.answers['objetivo'];
-            const nrg = testState.answers['energia'];
-            const dig = testState.answers['digesticion'];
+    const obj = testState.answers['objetivo'];
+    const nrg = testState.answers['energia'];
+    const dig = testState.answers['digesticion'];
 
-            let diagnosis = "";
-            let recommendedProd = null;
+    let diagnosis = "";
+    let recommendedProd = null;
 
-            // Algoritmo de recomendación inteligente en base a lo que respondió
-            if (obj === "Energía" || nrg === "alta-fatiga") {
-                diagnosis = "Tus niveles de energía necesitan un empuje celular inmediato. Para mitigar el cansancio y mejorar el enfoque sin bajones, tu cuerpo responderá increíblemente al aporte de vitaminas del complejo B.";
-                recommendedProd = OMNILIFE_PRODUCTS[0]; // Magnus Supreme
-            } else if (obj === "Control Peso" || dig === "mala-dig") {
-                diagnosis = "Tu metabolismo requiere optimizar la asimilación de nutrientes y acelerar la termogénesis. Una limpieza del sistema digestivo te ayudará a desinflamar de forma notable.";
-                recommendedProd = OMNILIFE_PRODUCTS[4]; // Teatino Limón
-            } else {
-                diagnosis = "Tu enfoque principal es preventivo y estructural. Para mantener tus defensas al 100% y acelerar la regeneración de tus músculos y tejidos, necesitas nutrientes micelizados.";
-                recommendedProd = OMNILIFE_PRODUCTS[2]; // Power Maker
-            }
+    // Algoritmo de recomendación inteligente
+    if (obj === "Energía" || nrg === "alta-fatiga") {
+        diagnosis = "Tus niveles de energía necesitan un empuje celular inmediato. Para mitigar el cansancio y mejorar el enfoque sin bajones, tu cuerpo responderá increíblemente al aporte de vitaminas del complejo B.";
+        recommendedProd = OMNILIFE_PRODUCTS[0]; // Magnus Supreme
+    } else if (obj === "Control Peso" || dig === "mala-dig") {
+        diagnosis = "Tu metabolismo requiere optimizar la asimilación de nutrientes y acelerar la termogénesis. Una limpieza del sistema digestivo te ayudará a desinflamar de forma notable.";
+        recommendedProd = OMNILIFE_PRODUCTS[4]; // Teatino Limón
+    } else {
+        diagnosis = "Tu enfoque principal es preventivo y estructural. Para mantener tus defensas al 100% y acelerar la regeneración de tus músculos y tejidos, necesitas nutrientes micelizados.";
+        recommendedProd = OMNILIFE_PRODUCTS[2]; // Power Maker
+    }
 
-            // Inyectar diagnóstico en pantalla
-            document.getElementById('test-diagnosis-text').innerText = diagnosis;
-            document.getElementById('test-recommended-product-title').innerText = recommendedProd.title;
+    // 1. Inyectar diagnóstico de texto en pantalla
+    document.getElementById('test-diagnosis-text').innerText = diagnosis;
+    
+    // 🌟 2. GENERAR E INYECTAR LA TARJETA COMPLETA DEL PRODUCTO RECOMENDADO
+    const productBox = document.getElementById('test-recommended-product-box');
+    if (productBox && recommendedProd) {
+        // Reutiliza tu HTML exacto de la tienda con imagen, precio y botones operativos
+        productBox.innerHTML = createProductCardHTML(recommendedProd);
+    }
 
-            // Guardar el resultado en el LocalStorage global para que afecte a otras partes de la app si se desea
-            localStorage.setItem('santos_test_result', JSON.stringify({
-                product: recommendedProd.title,
-                date: new Date().toLocaleDateString()
-            }));
+    // Guardar el resultado en el LocalStorage global
+    localStorage.setItem('santos_test_result', JSON.stringify({
+        product: recommendedProd.title,
+        date: new Date().toLocaleDateString()
+    }));
 
-            if (window.Telegram && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
-            if (typeof lucide !== 'undefined') lucide.createIcons();
-        }
+    // 🌟 CONTROL DE RECOMPENSA DIARIA:
+    const todayStr = new Date().toDateString();
+    const lastTestDate = localStorage.getItem('last_test_date');
+
+    if (lastTestDate !== todayStr) {
+        const puntosGanados = 30;
+        state.user.pointsProgress += puntosGanados;
+        
+        localStorage.setItem('golden_points', state.user.pointsProgress);
+        localStorage.setItem('last_test_date', todayStr);
+        
+        const pointsEl = document.getElementById('user-points-num');
+        if (pointsEl) pointsEl.innerText = state.user.pointsProgress;
+
+        if (window.Telegram && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
+        alert(`🎉 ¡Test completado! Has sumado +${puntosGanados} puntos a tu cuenta de Santos.`);
+    } else {
+        if (window.Telegram && tg.HapticFeedback) tg.HapticFeedback.impactOccurred("light");
+        console.log("📝 Test procesado. Hoy ya habías reclamado tus puntos por este test.");
+    }
+
+    // Volvemos a procesar Lucide para que los iconos de la tarjeta (corazón y carrito) se dibujen bien
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
 
         function resetHealthTest() {
-            document.getElementById('test-results-container').style.display = 'none';
-            document.getElementById('test-welcome').style.display = 'block';
-        }
+    // 1. Ocultamos los resultados y regresamos a la pantalla de bienvenida
+    document.getElementById('test-results-container').style.display = 'none';
+    document.getElementById('test-welcome').style.display = 'block';
+    
+    // 2. 🌟 LIMPIEZA DE SEGURIDAD: Reseteamos el estado del test para que empiece de cero limpio
+    testState.currentStep = 0;
+    testState.answers = {};
+
+    // 3. 📱 FEEDBACK HÁPTICO: Vibración ligera en Telegram al pulsar "Volver a empezar"
+    if (window.Telegram && tg.HapticFeedback) {
+        tg.HapticFeedback.impactOccurred("light");
+    }
+}
         
         function syncTelegramUser() {
             const user = tg.initDataUnsafe?.user;
