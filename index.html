@@ -1456,17 +1456,32 @@ document.addEventListener("DOMContentLoaded", () => {
         renderSubscriptionCards(); // 💎 Renderiza las tarjetas evaluando si está bloqueada o activa
     }
     
-    // 👤 GESTIÓN DE LA VISTA DE PERFIL
-    if (targetId === 'profile') {
-        document.getElementById('stat-streak').innerText = `${state.streak} Días`;
-        document.getElementById('stat-favs').innerText = `${state.favorites.length} Items`;
+    // 👤 GESTIÓN DE LA VISTA DE PERFIL (O la vista donde tengas los hábitos)
+    if (targetId === 'profile' || targetId === 'dashboard' || targetId === 'home') {
+        // Actualizar estadísticas básicas
+        const streakEl = document.getElementById('stat-streak');
+        const favsEl = document.getElementById('stat-favs');
+        if (streakEl) streakEl.innerText = `${state.streak} Días`;
+        if (favsEl) favsEl.innerText = `${state.favorites.length} Items`;
+        
+        // 💧 ¡SINCRONIZACIÓN MAESTRA DEL AGUA!
+        // Si el usuario ya usó la calculadora y guardó sus litros, forzamos que el texto del hábito se actualice
+        if (state.targetWater) {
+            const waterHabitLabel = document.getElementById('habit-water-text');
+            if (waterHabitLabel) {
+                waterHabitLabel.innerText = `Beber ${state.targetWater} L de Agua`;
+            }
+        }
         
         // 💎 Actualiza la tarjeta de estado VIP del perfil
-        updateProfileSubscriptionUI();
+        if (typeof updateProfileSubscriptionUI === 'function') {
+            updateProfileSubscriptionUI();
+        }
     }
     
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
+        
         function renderCarousel(type, productsList) {
             const track = document.getElementById(`track-${type}`);
             track.innerHTML = productsList.map(p => `
@@ -1721,72 +1736,81 @@ function toggleHabit(key) {
 
 function updateHabitCheckboxesUI() {
     const map = { water: 'chk-water', walk: 'chk-walk', supplement: 'chk-supplement' };
+    
     for (let key in map) {
         const el = document.getElementById(map[key]);
-        if (!el) continue;
+        // 🛡️ Seguridad: Si el elemento no está en la vista actual, pasa al siguiente sin dar error
+        if (!el) continue; 
 
         if (state.habitsCheck[key]) {
             el.classList.add('checked');
             el.innerHTML = '<i data-lucide="check" style="width:16px; height:16px;"></i>';
             
-            // Si el check individual ya está hecho, visualmente se muestra bloqueado (not-allowed)
+            // Estilo visual de casilla completada y bloqueada
             el.style.opacity = "0.6";
             el.style.cursor = "not-allowed";
         } else {
             el.classList.remove('checked');
             el.innerHTML = '';
             
-            // Si no está hecho, está disponible para clickar
+            // Estilo visual de casilla disponible para clickar
             el.style.opacity = "1";
             el.style.cursor = "pointer";
         }
     }
+    
+    // Renderiza el icono de Lucide si la librería está cargada
     if (typeof lucide !== 'undefined') lucide.createIcons();
 }
-        function updateHabitCheckboxesUI() {
-            const map = { water: 'chk-water', walk: 'chk-walk', supplement: 'chk-supplement' };
-            for (let key in map) {
-                const el = document.getElementById(map[key]);
-                if (state.habitsCheck[key]) {
-                    el.classList.add('checked');
-                    el.innerHTML = '<i data-lucide="check" style="width:16px; height:16px;"></i>';
-                } else {
-                    el.classList.remove('checked');
-                    el.innerHTML = '';
-                }
-            }
-            if (typeof lucide !== 'undefined') lucide.createIcons();
-        }
 
         function calculateHealthMetrics() {
-            const weight = document.getElementById('calc-weight-range').value;
-            document.getElementById('weight-lbl').innerText = `${weight} kg`;
+    const weight = document.getElementById('calc-weight-range').value;
+    document.getElementById('weight-lbl').innerText = `${weight} kg`;
 
-            const liters = ((weight * 35) / 1000).toFixed(1);
-            document.getElementById('water-result').innerText = `${liters} Litros / día`;
+    const liters = ((weight * 35) / 1000).toFixed(1);
+    document.getElementById('water-result').innerText = `${liters} Litros / día`;
 
-            const recBox = document.getElementById('calc-recommendation-box');
-            let recommendedProduct = OMNILIFE_PRODUCTS[4]; 
-            
-            if (weight > 85) {
-                recommendedProduct = OMNILIFE_PRODUCTS[8]; 
-            } else if (weight < 60) {
-                recommendedProduct = OMNILIFE_PRODUCTS[2]; 
-            }
+    // 💾 1. GUARDAR EN EL ESTADO GLOBAL (Para que no se pierda al cambiar de pestaña)
+    if (typeof state !== 'undefined') {
+        state.userWeight = weight;
+        state.targetWater = liters; 
+    }
 
-            recBox.innerHTML = `
-                <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:8px;">Suplemento ideal recomendado para tu rango de peso:</p>
-                <div style="background:rgba(255,255,255,0.02); border:1px solid var(--border-color); padding:10px; border-radius:var(--radius-md); display:flex; align-items:center; justify-content:space-between; gap:10px;">
-                    <img src="${recommendedProduct.img}" style="width:45px; height:45px; object-fit:cover; border-radius:6px;">
-                    <div style="flex:1;">
-                        <h5 style="font-size:0.85rem; font-weight:700;">${recommendedProduct.title}</h5>
-                        <p style="font-size:0.7rem; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px;">${recommendedProduct.desc}</p>
-                    </div>
-                    <button class="tag-btn" style="padding:6px 12px; font-size:0.7rem; background:var(--accent-emerald); color:white; border:none;" onclick="switchView('store')">Ver</button>
-                </div>
-            `;
-            if (typeof lucide !== 'undefined') lucide.createIcons();
-        }
+    // 🔄 2. ACTUALIZAR EL TEXTO DEL CHECKBOX DE HÁBITOS DINÁMICAMENTE
+    // Buscamos el elemento de texto que acompaña al checkbox de agua (ajústalo si el ID de tu etiqueta varía)
+    const waterHabitLabel = document.getElementById('habit-water-text');
+    if (waterHabitLabel) {
+        waterHabitLabel.innerText = `Beber ${liters} L de Agua`;
+    } else {
+        // Alternativa: Si no tienes ID en el texto, buscamos por el contenedor de la tarjeta de agua
+        // Esto busca un texto dentro de la sección que contenga la palabra "Litros" para actualizarlo
+        const alternativeLabel = document.querySelector('.habit-card span, .habit-item p');
+        // (Nota: Si ves que no cambia el texto, facilítame el HTML de tus checkboxes de hábitos 
+        // para darte el selector querySelector exacto).
+    }
+
+    const recBox = document.getElementById('calc-recommendation-box');
+    let recommendedProduct = OMNILIFE_PRODUCTS[4]; 
+    
+    if (weight > 85) {
+        recommendedProduct = OMNILIFE_PRODUCTS[8]; 
+    } else if (weight < 60) {
+        recommendedProduct = OMNILIFE_PRODUCTS[2]; 
+    }
+
+    recBox.innerHTML = `
+        <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:8px;">Suplemento ideal recomendado para tu rango de peso:</p>
+        <div style="background:rgba(255,255,255,0.02); border:1px solid var(--border-color); padding:10px; border-radius:var(--radius-md); display:flex; align-items:center; justify-content:space-between; gap:10px;">
+            <img src="${recommendedProduct.img}" style="width:45px; height:45px; object-fit:cover; border-radius:6px;">
+            <div style="flex:1;">
+                <h5 style="font-size:0.85rem; font-weight:700;">${recommendedProduct.title}</h5>
+                <p style="font-size:0.7rem; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px;">${recommendedProduct.desc}</p>
+            </div>
+            <button class="tag-btn" style="padding:6px 12px; font-size:0.7rem; background:var(--accent-emerald); color:white; border:none;" onclick="switchView('store')">Ver</button>
+        </div>
+    `;
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
 
         function triggerOrderPurchase(title, price) {
     // 1. ⚠️ Pon aquí el alias de Telegram de Santos (sin el @)
