@@ -992,57 +992,69 @@
     </nav>
 
     <script>
-        // 🌟 LISTA DE SUSCRIPTORES VIP (Actualizar manualmente aquí)
-// Puedes añadir tantos IDs como quieras de forma estructurada
+        // 🌟 LISTA DE SUSCRIPTORES VIP (Usa los nombres exactos de tus tarjetas)
 const VIP_SUBSCRIBERS_LIST = {
-    // 🌟 Almacenamos un array de planes activos en lugar de un solo string
     "1320417199": { 
         active: true,  
         expiryDate: "15/12/2026", 
-        plans: ["Pack Energía Total", "Pack Control de Peso"] // Usamos un Array
+        plans: ["Pack Energía Total", "Pack Control de Peso"] // Con esto tiene DOS planes activos a la vez
+    },
+    "987654321": { 
+        active: false, 
+        expiryDate: "01/05/2026", 
+        plans: ["Pack Bienestar Diario"] 
     }
 };
 
-/**
- * Verifica el estado VIP del usuario actual conectado a la Web App de Telegram
- * @returns {Object} Datos formateados de la suscripción
- */
+// Función auxiliar de verificación corregida para el nuevo formato de Array
 function checkUserVipStatus() {
-    // Valores por defecto para un usuario sin suscripción activa o que no está en la lista
     const defaultStatus = {
         isVip: false,
         statusText: "Usuario Regular",
         expiryText: "Sin suscripción activa",
         plan: "Ninguno",
-        colorClass: "status-regular"
+        colorClass: "status-regular",
+        userPlans: []
     };
 
-    // Validamos si la Web App está corriendo dentro de Telegram para extraer el ID real
     if (!window.Telegram || !tg.initDataUnsafe || !tg.initDataUnsafe.user) {
-        console.warn("⚠️ No se detectó entorno de Telegram. Devolviendo estado regular de prueba.");
+        // ID de prueba por si testeas en el navegador de la PC
+        const mockId = "1320417199"; 
+        const vipData = VIP_SUBSCRIBERS_LIST[mockId];
+        if (vipData && vipData.active) {
+            return {
+                isVip: true,
+                statusText: "Miembro VIP Activo 💎",
+                expiryText: `Expira el: ${vipData.expiryDate}`,
+                plan: vipData.plans.join(" + "), // Junta los planes en texto para el perfil
+                colorClass: "status-vip-active",
+                userPlans: vipData.plans
+            };
+        }
         return defaultStatus;
     }
 
     const currentTelegramId = tg.initDataUnsafe.user.id.toString();
     const vipData = VIP_SUBSCRIBERS_LIST[currentTelegramId];
 
-    // Si el usuario existe en tu lista manual
     if (vipData) {
         if (vipData.active) {
             return {
                 isVip: true,
                 statusText: "Miembro VIP Activo 💎",
                 expiryText: `Expira el: ${vipData.expiryDate}`,
-                plan: vipData.planName,
-                colorClass: "status-vip-active"
+                plan: vipData.plans.join(" + "), // Muestra "Pack Energía Total + Pack Control de Peso"
+                colorClass: "status-vip-active",
+                userPlans: vipData.plans
             };
         } else {
             return {
                 isVip: false,
                 statusText: "Suscripción Expirada ❌",
                 expiryText: `Finalizó el: ${vipData.expiryDate}`,
-                plan: vipData.planName,
-                colorClass: "status-vip-expired"
+                plan: vipData.plans.join(" + "),
+                colorClass: "status-vip-expired",
+                userPlans: []
             };
         }
     }
@@ -1056,27 +1068,23 @@ function checkUserVipStatus() {
  */
 function updateProfileSubscriptionUI() {
     const vipInfo = checkUserVipStatus();
-    
     const container = document.getElementById('profile-vip-card-container');
     if (!container) return;
 
-    // 1. Variable para guardar el HTML del botón si el usuario NO es VIP
     let joinButtonHTML = '';
-
-    // Si no es VIP (ya sea Regular o Expirado), preparamos el botón hacia su ID exacto
     if (!vipInfo.isVip) {
         joinButtonHTML = `
             <button class="tag-btn" 
-                    style="width: 100%; margin-top: 14px; background: linear-gradient(135deg, var(--accent-gold, #f59e0b), #fb923c); color: white; border: none; font-weight: 700; padding: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 10px rgba(245, 158, 11, 0.2);"
-                    onclick="switchView('subscription')"> <i data-lucide="sparkles" style="width:16px; height:16px;"></i>
+                    style="width: 100%; margin-top: 14px; background: linear-gradient(135deg, var(--accent-gold, #f59e0b), #fb923c); color: white; border: none; font-weight: 700; padding: 10px; display: flex; align-items: center; justify-content: center; gap: 8px;"
+                    onclick="switchView('subscription')">
+                <i data-lucide="sparkles" style="width:16px; height:16px;"></i>
                 Ver Planes de Suscripción VIP
             </button>
         `;
     }
 
-    // 2. Generamos la tarjeta unificando los datos y el botón condicional
     container.innerHTML = `
-        <div class="vip-status-card ${vipInfo.colorClass}" style="padding: 14px; border-radius: var(--radius-md); margin-bottom: 16px; border: 1px solid var(--border-color); background: var(--bg-surface);">
+        <div class="vip-status-card ${vipInfo.colorClass}" style="padding: 14px; border-radius: var(--radius-md); margin-bottom: 16px; border: 1px solid var(--border-color); background: var(--bg-surface); text-align: left;">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
                 <span style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); font-weight: 700;">Estado de Cuenta</span>
                 <span style="font-size: 0.85rem; font-weight: bold;" class="badge-status">${vipInfo.statusText}</span>
@@ -1838,56 +1846,35 @@ function updateHabitCheckboxesUI() {
         /**
  * Renderiza dinámicamente las tarjetas de suscripción evaluando el estado VIP
  */
-function renderSubscriptionCards() {
+ function renderSubscriptionCards() {
     const container = document.getElementById('subscriptions-grid-container');
     if (!container) return;
 
-    // Obtener los datos reales de la suscripción del usuario actual
     const vipInfo = checkUserVipStatus(); 
-    
-    // Recuperar el ID del plan del usuario directamente desde tu base de datos manual (VIP_SUBSCRIBERS_LIST)
-    let activePlanName = "";
-    if (vipInfo.isVip && window.Telegram && tg.initDataUnsafe && tg.initDataUnsafe.user) {
-        const currentTelegramId = tg.initDataUnsafe.user.id.toString();
-        if (VIP_SUBSCRIBERS_LIST[currentTelegramId]) {
-            // Guardamos el nombre exacto del plan contratado
-            activePlanName = VIP_SUBSCRIBERS_LIST[currentTelegramId].planName;
-        }
-    }
+    const activePlans = vipInfo.userPlans || []; // Array de planes contratados (ej: ["Pack Energía Total", "Pack Control de Peso"])
 
-    // Mapear y generar el HTML para cada tarjeta
     container.innerHTML = OMNILIFE_SUBSCRIPTIONS.map(pack => {
-        // Comprobar si ESTE pack específico es el que el usuario tiene activo
-        // (Asociamos el título del pack con el planName de tu lista manual)
-        // 🌟 Verifica si el paquete actual está incluido en el array de planes del usuario
-const currentTelegramId = tg.initDataUnsafe?.user?.id?.toString();
-const userPlans = VIP_SUBSCRIBERS_LIST[currentTelegramId]?.plans || [];
-const isThisPackActive = vipInfo.isVip && userPlans.includes(pack.title);
+        // 🌟 CORRECCIÓN CLAVE: Verifica si ESTE pack específico está dentro del array del usuario
+        const isThisPackActive = vipInfo.isVip && activePlans.includes(pack.title);
 
         let cardStyle = "";
         let badgeHTML = "";
         let buttonHTML = "";
 
         if (isThisPackActive) {
-            // 💎 DISEÑO TARJETA ACTIVA: Bordes dorados resplandecientes y efectos premium
-            cardStyle = `border: 2px solid var(--accent-gold, #f59e0b); box-shadow: 0 0 20px rgba(245, 158, 11, 0.3); position: relative; overflow: hidden;`;
-            
+            cardStyle = `border: 2px solid var(--accent-gold, #f59e0b); box-shadow: 0 0 20px rgba(245, 158, 11, 0.2); position: relative; overflow: hidden;`;
             badgeHTML = `
-                <div style="position: absolute; top: 12px; right: 12px; background: linear-gradient(135deg, #f59e0b, #fb923c); color: white; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 800; display: flex; align-items: center; gap: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+                <div style="position: absolute; top: 12px; right: 12px; background: linear-gradient(135deg, #f59e0b, #fb923c); color: white; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 800; display: flex; align-items: center; gap: 4px;">
                     <i data-lucide="check-circle" style="width:12px; height:12px;"></i> TU PLAN ACTIVO
                 </div>
             `;
-
             buttonHTML = `
                 <button class="tag-btn" style="width: 100%; padding: 12px; background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px dashed var(--border-color); cursor: not-allowed; font-weight: bold;" disabled>
                     🔒 Suscripción Activa (${vipInfo.expiryText.replace("Expira el: ", "")})
                 </button>
             `;
         } else {
-            // 🛒 DISEÑO TARJETA NORMAL: Estilo estándar para comprar
-            // Si el pack está marcado como 'gold: true', le damos un toque sutil de "Recomendado"
-            cardStyle = pack.gold ? `border: 1px solid rgba(245, 158, 11, 0.4);` : `border: 1px solid var(--border-color);`;
-            
+            cardStyle = pack.gold ? `border: 1px solid rgba(245, 158, 11, 0.4); position: relative;` : `border: 1px solid var(--border-color); position: relative;`;
             if (pack.gold) {
                 badgeHTML = `
                     <div style="position: absolute; top: 12px; right: 12px; background: rgba(245, 158, 11, 0.2); color: var(--accent-gold); padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: bold;">
@@ -1895,7 +1882,6 @@ const isThisPackActive = vipInfo.isVip && userPlans.includes(pack.title);
                     </div>
                 `;
             }
-
             buttonHTML = `
                 <button class="tag-btn" style="width: 100%; padding: 12px; background: linear-gradient(135deg, var(--accent-emerald, #10b981), #059669); color: white; border: none; font-weight: 700; cursor: pointer; border-radius: var(--radius-md);" 
                         onclick="triggerSubscriptionPurchase('${pack.title}')">
@@ -1904,20 +1890,16 @@ const isThisPackActive = vipInfo.isVip && userPlans.includes(pack.title);
             `;
         }
 
-        // Renderizado del cuerpo estructurado de la tarjeta
         return `
             <div class="dashboard-card" style="margin-bottom: 20px; text-align: left; background: var(--bg-surface); border-radius: var(--radius-lg); padding: 16px; ${cardStyle}">
                 ${badgeHTML}
-                
                 <div style="width: 100%; height: 120px; background-image: url('${pack.bg}'); background-size: cover; background-position: center; border-radius: var(--radius-md); margin-bottom: 14px;"></div>
-                
                 <h3 style="font-size: 1.2rem; font-weight: 800; margin: 0 0 6px 0; color: var(--text-main);">${pack.title}</h3>
                 <div style="display: flex; align-items: baseline; gap: 8px; margin-bottom: 14px;">
                     <span style="font-size: 1.5rem; font-weight: 800; color: ${isThisPackActive ? 'var(--accent-gold)' : 'var(--text-main)'};">$${pack.price}</span>
                     <span style="font-size: 0.9rem; text-decoration: line-through; color: var(--text-muted);">$${pack.oldPrice}</span>
                     <span style="font-size: 0.75rem; color: var(--text-muted);">/ mes</span>
                 </div>
-                
                 <ul style="list-style: none; padding: 0; margin: 0 0 16px 0; display: flex; flex-direction: column; gap: 8px;">
                     ${pack.perks.map(perk => `
                         <li style="font-size: 0.85rem; color: var(--text-main); display: flex; align-items: center; gap: 8px;">
@@ -1926,7 +1908,6 @@ const isThisPackActive = vipInfo.isVip && userPlans.includes(pack.title);
                         </li>
                     `).join('')}
                 </ul>
-                
                 ${buttonHTML}
             </div>
         `;
