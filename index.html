@@ -921,7 +921,7 @@
             <h4 style="margin-bottom:12px; display:flex; align-items:center; gap:6px;"><i data-lucide="calculator" style="color:var(--accent-emerald);"></i> Calculadora de Hidratación</h4>
             <div class="calc-wrapper">
                 <label style="font-size:0.85rem; color:var(--text-muted);">Arrastra tu peso actual: <strong style="color:white;" id="weight-lbl">70 kg</strong></label>
-                <input type="range" id="calc-weight-range" class="range-slider" min="40" max="140" value="70" oninput="calculateHealthMetrics()">
+                <input type="range" id="calc-weight-range" class="range-slider" min="40" max="140" value="70" oninput="calculateHealthMetrics()" onchange="calculateHealthMetrics()">
                 
                 <div class="calc-result-box">
                     <p style="font-size:0.8rem; color:var(--text-muted);">Tu consumo de agua ideal:</p>
@@ -1191,9 +1191,17 @@ document.addEventListener("DOMContentLoaded", () => {
         pointsEl.innerText = state.user.pointsProgress;
     }
     
-    // 🌟 CORRECCIÓN MAESTRA: Sincronizar el slider HTML con los datos guardados antes de calcular
+    // 4. Renderizar las vistas y componentes base de la aplicación
+    // ⚠️ ALERTA: Esto genera las estructuras HTML, por lo que debe ir PRIMERO
+    renderAllViews();
+    renderStoreGrid(); 
+    renderFavoritesGrid(); 
+    
+    // 🌟 CORRECCIÓN MAESTRA REUBICADA: 
+    // Sincronizamos el slider AHORA que renderAllViews() ya terminó de pintar el HTML definitivo
     const weightSlider = document.getElementById('calc-weight-range');
     const weightLabel = document.getElementById('weight-lbl');
+    
     if (weightSlider && state.userWeight) {
         weightSlider.value = state.userWeight;
     }
@@ -1201,18 +1209,15 @@ document.addEventListener("DOMContentLoaded", () => {
         weightLabel.innerText = `${state.userWeight} kg`;
     }
 
-    // 4. Renderizar vistas, tienda, favoritos y cálculos
-    renderAllViews();
-    renderStoreGrid(); 
-    renderFavoritesGrid(); 
-    calculateHealthMetrics(); // Ahora este cálculo leerá el peso correcto guardado
+    // 5. Ejecutamos el cálculo de métricas basándonos en el peso ya sincronizado
+    // Además, le pasamos explícitamente el valor por parámetro para blindarlo
+    calculateHealthMetrics(state.userWeight);
     
-    // 5. Inicializar iconos de Lucide si la librería está cargada
+    // 6. Inicializar iconos de Lucide si la librería está cargada
     if (typeof lucide !== 'undefined') {
         lucide.createIcons();
     }
 });
-
         function addPoints(amount, reason) {
     // 1. Sumamos los puntos al estado global
     state.user.pointsProgress += amount;
@@ -1786,45 +1791,58 @@ function updateHabitCheckboxesUI() {
     if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
-        function calculateHealthMetrics() {
-    const weight = document.getElementById('calc-weight-range').value;
-    document.getElementById('weight-lbl').innerText = `${weight} kg`;
-
-    const liters = ((weight * 35) / 1000).toFixed(1);
-    document.getElementById('water-result').innerText = `${liters} Litros / día`;
-
-    // 💾 Guardar en el estado global de la app
-    if (typeof state !== 'undefined') {
-        state.userWeight = weight;
-        state.targetWater = liters; 
-    }
-
-    // 🔄 Sincronizar el texto del hábito de forma inmediata
+        function calculateHealthMetrics(forcedWeight = null) {
+    const slider = document.getElementById('calc-weight-range');
+    const label = document.getElementById('weight-lbl');
+    const resultBox = document.getElementById('water-result');
     const waterHabitLabel = document.getElementById('habit-water-text');
+
+    if (!slider) return; // 🛡️ Seguridad por si no está en pantalla
+
+    // Si viene un peso forzado (del localStorage), usamos ese. Si no, el del slider.
+    const weight = forcedWeight ? forcedWeight : slider.value;
+
+    // Sincronizamos la interfaz de la calculadora
+    slider.value = weight;
+    if (label) label.innerText = `${weight} kg`;
+
+    // Cálculo matemático estricto
+    const liters = ((weight * 35) / 1000).toFixed(1);
+    if (resultBox) resultBox.innerText = `${liters} Litros / día`;
+
+    // 💾 GUARDADO ABSOLUTO E INMEDIATO
+    state.userWeight = parseInt(weight);
+    state.targetWater = liters;
+    localStorage.setItem('santos_weight', weight);
+    localStorage.setItem('santos_water', liters);
+
+    // 🔄 Cambiar el texto del hábito al instante
     if (waterHabitLabel) {
         waterHabitLabel.innerText = `¿Bebiste ${liters}L de Agua?`;
     }
 
+    // 📦 Bloque de recomendaciones (Tu lógica de Omnilife)
     const recBox = document.getElementById('calc-recommendation-box');
-    let recommendedProduct = OMNILIFE_PRODUCTS[4]; 
-    
-    if (weight > 85) {
-        recommendedProduct = OMNILIFE_PRODUCTS[8]; 
-    } else if (weight < 60) {
-        recommendedProduct = OMNILIFE_PRODUCTS[2]; 
-    }
+    if (recBox && typeof OMNILIFE_PRODUCTS !== 'undefined') {
+        let recommendedProduct = OMNILIFE_PRODUCTS[4]; 
+        if (weight > 85) {
+            recommendedProduct = OMNILIFE_PRODUCTS[8]; 
+        } else if (weight < 60) {
+            recommendedProduct = OMNILIFE_PRODUCTS[2]; 
+        }
 
-    recBox.innerHTML = `
-        <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:8px;">Suplemento ideal recomendado para tu rango de peso:</p>
-        <div style="background:rgba(255,255,255,0.02); border:1px solid var(--border-color); padding:10px; border-radius:var(--radius-md); display:flex; align-items:center; justify-content:space-between; gap:10px;">
-            <img src="${recommendedProduct.img}" style="width:45px; height:45px; object-fit:cover; border-radius:6px;">
-            <div style="flex:1;">
-                <h5 style="font-size:0.85rem; font-weight:700;">${recommendedProduct.title}</h5>
-                <p style="font-size:0.7rem; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px;">${recommendedProduct.desc}</p>
+        recBox.innerHTML = `
+            <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:8px;">Suplemento ideal recomendado para tu rango de peso:</p>
+            <div style="background:rgba(255,255,255,0.02); border:1px solid var(--border-color); padding:10px; border-radius:var(--radius-md); display:flex; align-items:center; justify-content:space-between; gap:10px;">
+                <img src="${recommendedProduct.img}" style="width:45px; height:45px; object-fit:cover; border-radius:6px;">
+                <div style="flex:1;">
+                    <h5 style="font-size:0.85rem; font-weight:700;">${recommendedProduct.title}</h5>
+                    <p style="font-size:0.7rem; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px;">${recommendedProduct.desc}</p>
+                </div>
+                <button class="tag-btn" style="padding:6px 12px; font-size:0.7rem; background:var(--accent-emerald); color:white; border:none;" onclick="switchView('store')">Ver</button>
             </div>
-            <button class="tag-btn" style="padding:6px 12px; font-size:0.7rem; background:var(--accent-emerald); color:white; border:none;" onclick="switchView('store')">Ver</button>
-        </div>
-    `;
+        `;
+    }
     if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
