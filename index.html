@@ -280,6 +280,7 @@
         }
 
         /* 🎪 CAROUSEL SLIDERS */
+        /* 🎪 CAROUSEL SLIDERS CON DESLIZAMIENTO TÁCTIL (SWIPE) */
         .carousel-section {
             margin-bottom: 24px;
             position: relative;
@@ -307,15 +308,22 @@
         }
 
         .carousel-track-container {
-            overflow: hidden;
             width: 100%;
             border-radius: var(--radius-md);
+            overflow-x: auto; /* Permite deslizar con el dedo */
+            scroll-behavior: smooth; /* Hace que el movimiento por flechas sea suave */
+            scroll-snap-type: x mandatory; /* Fuerza a que las tarjetas encajen perfectamente */
+            scrollbar-width: none; /* Oculta la barra de scroll en Firefox */
         }
+        .carousel-track-container::-webkit-scrollbar {
+            display: none; /* Oculta la barra de scroll en Chrome/Safari/Telegram */
+        }
+
         .carousel-track {
             display: flex;
             gap: 12px;
-            transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-            will-change: transform;
+            width: max-content;
+            padding: 4px 2px;
         }
 
         .carousel-item-card {
@@ -328,6 +336,7 @@
             flex-direction: column;
             gap: 8px;
             position: relative;
+            scroll-snap-align: start; /* Punto de anclaje para el dedo */
         }
 
         /* ==========================================================================
@@ -882,6 +891,9 @@
         // ==========================================================================
         // 🎪 ENGINE: CAROUSELS CONTROLLER
         // ==========================================================================
+        // ==========================================================================
+        // 🎪 ENGINE: CAROUSELS CONTROLLER (SWIPE & BUTTONS COMPATIBLE)
+        // ==========================================================================
         function renderCarousel(type, productsList) {
             const track = document.getElementById(`track-${type}`);
             track.innerHTML = productsList.map(p => `
@@ -897,18 +909,17 @@
         }
 
         function moveCarousel(type, direction) {
-            const track = document.getElementById(`track-${type}`);
-            const totalItems = track.children.length;
-            const itemWidth = 172; // Ancho del item (160px) + gap (12px)
-            const visibleWidth = track.parentElement.clientWidth;
-            const maxScroll = (totalItems * itemWidth) - visibleWidth;
-
-            carouselIndices[type] += direction * itemWidth;
-
-            if (carouselIndices[type] < 0) carouselIndices[type] = 0;
-            if (carouselIndices[type] > maxScroll) carouselIndices[type] = maxScroll;
-
-            track.style.transform = `translateX(-${carouselIndices[type]}px)`;
+            // Buscamos el contenedor padre que es el que ahora tiene el scroll físico
+            const container = document.getElementById(`track-${type}`).parentElement;
+            const itemWidth = 172; // 160px de tarjeta + 12px de separación (gap)
+            
+            // Calculamos el desplazamiento sumando o restando el tamaño de una tarjeta
+            container.scrollLeft += direction * itemWidth;
+            
+            // Retroalimentación táctil leve en Telegram al pulsar las flechas
+            if (window.Telegram && tg.HapticFeedback) {
+                tg.HapticFeedback.impactOccurred("light");
+            }
         }
 
         // ==========================================================================
