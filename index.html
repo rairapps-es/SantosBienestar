@@ -1289,68 +1289,96 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         function checkHabitDateRefresh() {
-            const todayStr = new Date().toDateString();
-            if (state.habitsCheck.date !== todayStr) {
-                if (state.habitsCheck.date !== '') {
-                    const compl = state.habitsCheck.water && state.habitsCheck.walk && state.habitsCheck.supplement;
-                    if (!compl) {
-                        state.streak = 0;
-                        localStorage.setItem('golden_streak', 0);
-                    }
-                }
-                state.habitsCheck = { date: todayStr, water: false, walk: false, supplement: false };
-                localStorage.setItem('golden_habits', JSON.stringify(state.habitsCheck));
+    const todayStr = new Date().toDateString();
+    
+    if (state.habitsCheck.date !== todayStr) {
+        if (state.habitsCheck.date !== '') {
+            // Si cambia el día y NO completó los 3 hábitos ayer, la racha vuelve a 0
+            const compl = state.habitsCheck.water && state.habitsCheck.walk && state.habitsCheck.supplement;
+            if (!compl) {
+                state.streak = 0;
+                localStorage.setItem('golden_streak', 0);
             }
-            document.getElementById('streak-num').innerText = state.streak;
-            updateHabitCheckboxesUI();
         }
+        // Inicializamos el nuevo día limpio
+        state.habitsCheck = { date: todayStr, water: false, walk: false, supplement: false, completed: false };
+        localStorage.setItem('golden_habits', JSON.stringify(state.habitsCheck));
+    }
+    
+    document.getElementById('streak-num').innerText = state.streak;
+    updateHabitCheckboxesUI();
+}
 
-        function toggleHabit(key) {
-    // 1. 🛡️ FILTRO DE BLOQUEO: Si el día ya está completado, congelamos la función
+function toggleHabit(key) {
+    // 🛡️ BLOQUEO 1: Si el día entero ya está completado y cerrado
     if (state.habitsCheck.completed) {
-        alert("🔒 Ya completaste tus hábitos de hoy. ¡Vuelve mañana para seguir sumando!");
+        alert("🔒 Ya completaste tus hábitos de hoy. ¡Vuelve mañana para seguir la racha!");
         return;
     }
 
-    // 2. Alternamos el estado del hábito seleccionado
-    state.habitsCheck[key] = !state.habitsCheck[key];
+    // 🛡️ BLOQUEO 2: Si ESTE hábito específico ya está marcado, impedimos que se desmarque
+    if (state.habitsCheck[key] === true) {
+        alert("📍 Este hábito ya lo has completado hoy. ¡No puedes desmarcarlo!");
+        return;
+    }
+
+    // 🌟 ACCIÓN: El hábito pasa a true de forma definitiva (No hay vuelta atrás)
+    state.habitsCheck[key] = true;
     localStorage.setItem('golden_habits', JSON.stringify(state.habitsCheck));
     updateHabitCheckboxesUI();
 
-    // 3. Comprobamos si los tres hábitos están activos (true)
+    // Comprobamos si con este click ya se completaron los tres
     const allDone = state.habitsCheck.water && state.habitsCheck.walk && state.habitsCheck.supplement;
     
     if (allDone) {
-        // 4. Marcar como completado el día en el estado y persistencia para bloquear futuros clics
+        // Bloqueamos el día por completo
         state.habitsCheck.completed = true;
         localStorage.setItem('golden_habits', JSON.stringify(state.habitsCheck));
 
-        // 5. Gestión de Racha: Sumamos 1 día a la racha actual
+        // Sumamos la racha diaria
         state.streak += 1;
         localStorage.setItem('golden_streak', state.streak);
-        const streakEl = document.getElementById('streak-num');
-        if (streakEl) streakEl.innerText = state.streak;
+        document.getElementById('streak-num').innerText = state.streak;
 
-        // 6. 🌟 GAMIFICACIÓN: Sumamos 50 puntos al usuario por completar el día
+        // 🏆 GAMIFICACIÓN: Sumamos los 50 puntos por completar el combo del día
         state.user.pointsProgress += 50;
         localStorage.setItem('golden_points', state.user.pointsProgress);
         const pointsEl = document.getElementById('user-points-num');
         if (pointsEl) pointsEl.innerText = state.user.pointsProgress;
-
-        // 7. Feedback de Telegram (Vibración de éxito) y aviso en pantalla
-        if (window.Telegram && tg.HapticFeedback) {
-            tg.HapticFeedback.notificationOccurred("success");
-        }
-        alert("🎉 ¡Increíble! Has completado tus hábitos, sumas +1 día de racha y ganas 50 puntos. ¡Mañana más!");
         
-        // Volvemos a pintar para que los elementos adquieran los estilos visuales de bloqueo instantáneamente
+        if (window.Telegram && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
+        alert("🎉 ¡Increíble! Has completado tus hábitos de hoy, ganas 50 puntos y salvas tu racha. Sistema bloqueado hasta mañana.");
+        
         updateHabitCheckboxesUI();
     } else {
-        // Vibración sutil si solo está marcando o desmarcando una tarea sin terminar el combo
-        if (window.Telegram && tg.HapticFeedback) {
-            tg.HapticFeedback.impactOccurred("light");
+        // Vibración ligera si marca un check individual con éxito
+        if (window.Telegram && tg.HapticFeedback) tg.HapticFeedback.impactOccurred("light");
+    }
+}
+
+function updateHabitCheckboxesUI() {
+    const map = { water: 'chk-water', walk: 'chk-walk', supplement: 'chk-supplement' };
+    for (let key in map) {
+        const el = document.getElementById(map[key]);
+        if (!el) continue;
+
+        if (state.habitsCheck[key]) {
+            el.classList.add('checked');
+            el.innerHTML = '<i data-lucide="check" style="width:16px; height:16px;"></i>';
+            
+            // Si el check individual ya está hecho, visualmente se muestra bloqueado (not-allowed)
+            el.style.opacity = "0.6";
+            el.style.cursor = "not-allowed";
+        } else {
+            el.classList.remove('checked');
+            el.innerHTML = '';
+            
+            // Si no está hecho, está disponible para clickar
+            el.style.opacity = "1";
+            el.style.cursor = "pointer";
         }
     }
+    if (typeof lucide !== 'undefined') lucide.createIcons();
 }
         function updateHabitCheckboxesUI() {
             const map = { water: 'chk-water', walk: 'chk-walk', supplement: 'chk-supplement' };
