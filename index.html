@@ -1008,25 +1008,34 @@ const VIP_SUBSCRIBERS_LIST = {
 };
 
 function checkUserVipStatus() {
+    // 1. Estado por defecto: El usuario NO es VIP hasta que se demuestre lo contrario.
     const defaultStatus = {
         isVip: false,
         statusText: "Usuario Regular",
         expiryText: "Sin suscripción activa",
         plan: "Ninguno",
         colorClass: "status-regular",
-        userPlans: [] // Array de IDs activos
+        userPlans: [] // Array de IDs activos vacío
     };
 
-    // Extraer ID de Telegram real o de pruebas
-    let currentTelegramId = "1320417199"; 
-    if (window.Telegram && tg.initDataUnsafe && tg.initDataUnsafe.user) {
-        currentTelegramId = tg.initDataUnsafe.user.id.toString();
+    let currentTelegramId = null;
+
+    // 🌟 2. EXTRACCIÓN ESTRICTA Y SEGURA DEL ID DEL USUARIO REAL
+    // Verificamos secuencialmente la existencia de la librería, los datos de inicio y el objeto user.
+    if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe && window.Telegram.WebApp.initDataUnsafe.user) {
+        currentTelegramId = window.Telegram.WebApp.initDataUnsafe.user.id.toString();
+    } else {
+        // Si no estamos dentro de Telegram (ej: probando en PC), retornamos 'Regular' inmediatamente.
+        console.warn("⚠️ No se pudo obtener el ID del usuario de Telegram. Entorno no soportado.");
+        return defaultStatus;
     }
 
+    // 3. Verificación cruzada con tu lista manual (VIP_SUBSCRIBERS_LIST)
     const vipData = VIP_SUBSCRIBERS_LIST[currentTelegramId];
 
+    // 4. Lógica de retorno de estado basada en los datos encontrados
     if (vipData && vipData.active) {
-        // Obtenemos los títulos legibles buscando en tu array global OMNILIFE_SUBSCRIPTIONS usando los IDs
+        // Usuario VIP Activo: Mapeamos los IDs a nombres legibles
         const planTitles = vipData.plans.map(id => {
             const foundPack = OMNILIFE_SUBSCRIPTIONS.find(p => p.id === id);
             return foundPack ? foundPack.title : id;
@@ -1036,11 +1045,12 @@ function checkUserVipStatus() {
             isVip: true,
             statusText: "Miembro VIP Activo 💎",
             expiryText: `Expira el: ${vipData.expiryDate}`,
-            plan: planTitles.join(" + "), // Para el perfil: "Pack Energía Total + Pack Control de Peso"
+            plan: planTitles.join(" + "), // Ej: "Pack Energía Total + Pack Control de Peso"
             colorClass: "status-vip-active",
             userPlans: vipData.plans // [ "pack-energia", "pack-peso" ]
         };
     } else if (vipData && !vipData.active) {
+        // Usuario con VIP Expirado
         return {
             isVip: false,
             statusText: "Suscripción Expirada ❌",
@@ -1051,6 +1061,7 @@ function checkUserVipStatus() {
         };
     }
 
+    // 5. Si el ID no está en la lista o vipData está indefinido, es un usuario Regular.
     return defaultStatus;
 }
 
