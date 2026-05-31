@@ -993,20 +993,20 @@
 
     <script>
         // 🌟 LISTA DE SUSCRIPTORES VIP (Usa los nombres exactos de tus tarjetas)
+// 🌟 LISTA DE SUSCRIPTORES VIP (Vinculada por IDs únicos de tarjeta)
 const VIP_SUBSCRIBERS_LIST = {
     "1320417199": { 
         active: true,  
         expiryDate: "15/12/2026", 
-        plans: ["Pack Energía Total", "Pack Control de Peso"] // Con esto tiene DOS planes activos a la vez
+        plans: ["pack-energia", "pack-peso"] // 🔥 Conectado directamente con pack.id
     },
     "987654321": { 
         active: false, 
         expiryDate: "01/05/2026", 
-        plans: ["Pack Bienestar Diario"] 
+        plans: ["pack-bienestar"] 
     }
 };
 
-// Función auxiliar de verificación corregida para el nuevo formato de Array
 function checkUserVipStatus() {
     const defaultStatus = {
         isVip: false,
@@ -1014,49 +1014,41 @@ function checkUserVipStatus() {
         expiryText: "Sin suscripción activa",
         plan: "Ninguno",
         colorClass: "status-regular",
-        userPlans: []
+        userPlans: [] // Array de IDs activos
     };
 
-    if (!window.Telegram || !tg.initDataUnsafe || !tg.initDataUnsafe.user) {
-        // ID de prueba por si testeas en el navegador de la PC
-        const mockId = "1320417199"; 
-        const vipData = VIP_SUBSCRIBERS_LIST[mockId];
-        if (vipData && vipData.active) {
-            return {
-                isVip: true,
-                statusText: "Miembro VIP Activo 💎",
-                expiryText: `Expira el: ${vipData.expiryDate}`,
-                plan: vipData.plans.join(" + "), // Junta los planes en texto para el perfil
-                colorClass: "status-vip-active",
-                userPlans: vipData.plans
-            };
-        }
-        return defaultStatus;
+    // Extraer ID de Telegram real o de pruebas
+    let currentTelegramId = "1320417199"; 
+    if (window.Telegram && tg.initDataUnsafe && tg.initDataUnsafe.user) {
+        currentTelegramId = tg.initDataUnsafe.user.id.toString();
     }
 
-    const currentTelegramId = tg.initDataUnsafe.user.id.toString();
     const vipData = VIP_SUBSCRIBERS_LIST[currentTelegramId];
 
-    if (vipData) {
-        if (vipData.active) {
-            return {
-                isVip: true,
-                statusText: "Miembro VIP Activo 💎",
-                expiryText: `Expira el: ${vipData.expiryDate}`,
-                plan: vipData.plans.join(" + "), // Muestra "Pack Energía Total + Pack Control de Peso"
-                colorClass: "status-vip-active",
-                userPlans: vipData.plans
-            };
-        } else {
-            return {
-                isVip: false,
-                statusText: "Suscripción Expirada ❌",
-                expiryText: `Finalizó el: ${vipData.expiryDate}`,
-                plan: vipData.plans.join(" + "),
-                colorClass: "status-vip-expired",
-                userPlans: []
-            };
-        }
+    if (vipData && vipData.active) {
+        // Obtenemos los títulos legibles buscando en tu array global OMNILIFE_SUBSCRIPTIONS usando los IDs
+        const planTitles = vipData.plans.map(id => {
+            const foundPack = OMNILIFE_SUBSCRIPTIONS.find(p => p.id === id);
+            return foundPack ? foundPack.title : id;
+        });
+
+        return {
+            isVip: true,
+            statusText: "Miembro VIP Activo 💎",
+            expiryText: `Expira el: ${vipData.expiryDate}`,
+            plan: planTitles.join(" + "), // Para el perfil: "Pack Energía Total + Pack Control de Peso"
+            colorClass: "status-vip-active",
+            userPlans: vipData.plans // [ "pack-energia", "pack-peso" ]
+        };
+    } else if (vipData && !vipData.active) {
+        return {
+            isVip: false,
+            statusText: "Suscripción Expirada ❌",
+            expiryText: `Finalizó el: ${vipData.expiryDate}`,
+            plan: "Ninguno (Caducado)",
+            colorClass: "status-vip-expired",
+            userPlans: []
+        };
     }
 
     return defaultStatus;
@@ -1851,20 +1843,21 @@ function updateHabitCheckboxesUI() {
     if (!container) return;
 
     const vipInfo = checkUserVipStatus(); 
-    const activePlans = vipInfo.userPlans || []; // Array de planes contratados (ej: ["Pack Energía Total", "Pack Control de Peso"])
+    const activePlans = vipInfo.userPlans || []; // Guarda los IDs activos (ej: ["pack-energia", "pack-peso"])
 
     container.innerHTML = OMNILIFE_SUBSCRIPTIONS.map(pack => {
-        // 🌟 CORRECCIÓN CLAVE: Verifica si ESTE pack específico está dentro del array del usuario
-        const isThisPackActive = vipInfo.isVip && activePlans.includes(pack.title);
+        // 🌟 CONEXIÓN CRÍTICA POR ID: Evaluamos si el ID de esta tarjeta está en el perfil del usuario
+        const isThisPackActive = vipInfo.isVip && activePlans.includes(pack.id);
 
         let cardStyle = "";
         let badgeHTML = "";
         let buttonHTML = "";
 
         if (isThisPackActive) {
+            // Diseño Premium Tarjeta Bloqueada/Activa
             cardStyle = `border: 2px solid var(--accent-gold, #f59e0b); box-shadow: 0 0 20px rgba(245, 158, 11, 0.2); position: relative; overflow: hidden;`;
             badgeHTML = `
-                <div style="position: absolute; top: 12px; right: 12px; background: linear-gradient(135deg, #f59e0b, #fb923c); color: white; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 800; display: flex; align-items: center; gap: 4px;">
+                <div style="position: absolute; top: 12px; right: 12px; background: linear-gradient(135deg, #f59e0b, #fb923c); color: white; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 800; display: flex; align-items: center; gap: 4px; z-index: 10;">
                     <i data-lucide="check-circle" style="width:12px; height:12px;"></i> TU PLAN ACTIVO
                 </div>
             `;
@@ -1874,10 +1867,11 @@ function updateHabitCheckboxesUI() {
                 </button>
             `;
         } else {
+            // Diseño Tarjeta Normal para Comprar
             cardStyle = pack.gold ? `border: 1px solid rgba(245, 158, 11, 0.4); position: relative;` : `border: 1px solid var(--border-color); position: relative;`;
             if (pack.gold) {
                 badgeHTML = `
-                    <div style="position: absolute; top: 12px; right: 12px; background: rgba(245, 158, 11, 0.2); color: var(--accent-gold); padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: bold;">
+                    <div style="position: absolute; top: 12px; right: 12px; background: rgba(245, 158, 11, 0.2); color: var(--accent-gold); padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: bold; z-index: 10;">
                         🔥 RECOMENDADO
                     </div>
                 `;
