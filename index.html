@@ -897,6 +897,9 @@
             </div>
         </div>
 
+        <!-- 🚨 AQUÍ SE INYECTARÁN LOS DATOS VIP DE FORMA AUTOMÁTICA -->
+    <div id="profile-vip-card-container"></div>
+    
         <div class="profile-stat-row">
             <div class="stat-box">
                 <h6>Hábito Racha</h6>
@@ -910,10 +913,6 @@
         
 <!-- Dentro de tu contenedor de Perfil o Dashboard -->
 <div class="profile-section">
-    
-    <!-- 🚨 AQUÍ SE INYECTARÁN LOS DATOS VIP DE FORMA AUTOMÁTICA -->
-    <div id="profile-vip-card-container"></div>
-    
     <!-- El resto de tus datos de usuario (Puntos, nombre, etc) siguen aquí abajo... -->
 </div>
         
@@ -1416,13 +1415,18 @@ document.addEventListener("DOMContentLoaded", () => {
     if (viewId === 'favorites') renderFavoritesGrid();
     if (viewId === 'store') renderStoreGrid();
     if (viewId === 'test') resetHealthTest(); // 📋 Inicializa el test nativo al entrar
+    
+    // 🌟 GESTIÓN DE LA VISTA DE PERFIL
     if (viewId === 'profile') {
         document.getElementById('stat-streak').innerText = `${state.streak} Días`;
         document.getElementById('stat-favs').innerText = `${state.favorites.length} Items`;
+        
+        // 💎 Actualiza la tarjeta de suscripción VIP de forma dinámica con los datos manuales
+        updateProfileSubscriptionUI();
     }
+    
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
-
         function renderCarousel(type, productsList) {
             const track = document.getElementById(`track-${type}`);
             track.innerHTML = productsList.map(p => `
