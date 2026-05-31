@@ -27,7 +27,6 @@
             --safe-bottom: 16px;
         }
 
-        /* Sincronización automática si Telegram provee colores de tema */
         body.tg-theme {
             --bg-primary: var(--tg-theme-bg-color, #0f172a);
             --bg-surface: var(--tg-theme-secondary-bg-color, #1e293b);
@@ -37,9 +36,6 @@
             --border-color: rgba(255, 255, 255, 0.1);
         }
 
-        /* ==========================================================================
-           🚀 CORE STYLES & LAYOUT (SPA)
-           ========================================================================== */
         * {
             box-sizing: border-box;
             margin: 0;
@@ -120,7 +116,7 @@
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            color: #white;
+            color: white;
             background: linear-gradient(135deg, #10b981, #059669);
             box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
         }
@@ -231,7 +227,7 @@
         }
 
         /* ==========================================================================
-           🏠 VIEW: HOME (HABITS, CAROUSELS)
+           🏠 VIEW: HOME & TACTILE CAROUSELS
            ========================================================================== */
         .habits-container {
             background: var(--bg-surface);
@@ -279,8 +275,6 @@
             color: white;
         }
 
-        /* 🎪 CAROUSEL SLIDERS */
-        /* 🎪 CAROUSEL SLIDERS CON DESLIZAMIENTO TÁCTIL (SWIPE) */
         .carousel-section {
             margin-bottom: 24px;
             position: relative;
@@ -310,13 +304,13 @@
         .carousel-track-container {
             width: 100%;
             border-radius: var(--radius-md);
-            overflow-x: auto; /* Permite deslizar con el dedo */
-            scroll-behavior: smooth; /* Hace que el movimiento por flechas sea suave */
-            scroll-snap-type: x mandatory; /* Fuerza a que las tarjetas encajen perfectamente */
-            scrollbar-width: none; /* Oculta la barra de scroll en Firefox */
+            overflow-x: auto;
+            scroll-behavior: smooth;
+            scroll-snap-type: x mandatory;
+            scrollbar-width: none;
         }
         .carousel-track-container::-webkit-scrollbar {
-            display: none; /* Oculta la barra de scroll en Chrome/Safari/Telegram */
+            display: none;
         }
 
         .carousel-track {
@@ -336,7 +330,7 @@
             flex-direction: column;
             gap: 8px;
             position: relative;
-            scroll-snap-align: start; /* Punto de anclaje para el dedo */
+            scroll-snap-align: start;
         }
 
         /* ==========================================================================
@@ -402,7 +396,6 @@
             gap: 12px;
         }
 
-        /* Product Card Master Blueprint */
         .product-card {
             background: var(--bg-surface);
             border-radius: var(--radius-lg);
@@ -429,40 +422,39 @@
         }
 
         .p-fav-btn {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    background: rgba(15, 23, 42, 0.6);
-    border: none;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    cursor: pointer;
-    z-index: 10;
-    backdrop-filter: blur(4px);
-    transition: all 0.2s ease; /* Añade esto para que el cambio de color sea suave */
-}
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(15, 23, 42, 0.6);
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: pointer;
+            z-index: 10;
+            backdrop-filter: blur(4px);
+            transition: all 0.2s ease;
+        }
 
-/* 🌟 ESTA ES LA REGLA CORREGIDA QUE APUNTA AL SVG DE LUCIDE 🌟 */
-.p-fav-btn.is-fav {
-    background: rgba(239, 68, 68, 0.2) !important;
-    border: 1px solid var(--accent-danger) !important;
-}
+        /* CARD FAVORITOS CORRECCIÓN SVG */
+        .p-fav-btn.is-fav {
+            background: rgba(239, 68, 68, 0.2) !important;
+            border: 1px solid var(--accent-danger) !important;
+        }
+        .p-fav-btn.is-fav svg {
+            fill: var(--accent-danger) !important;
+            stroke: var(--accent-danger) !important;
+            color: var(--accent-danger) !important;
+        }
 
-.p-fav-btn.is-fav svg {
-    fill: var(--accent-danger) !important;
-    stroke: var(--accent-danger) !important;
-    color: var(--accent-danger) !important;
-}
-        
         .p-img-box {
             width: 100%;
             aspect-ratio: 1 / 1;
-            background: #cbd5e1; /* Base Shimmer/Fallback */
+            background: #cbd5e1;
             border-radius: var(--radius-md);
             overflow: hidden;
             margin-bottom: 8px;
@@ -493,7 +485,7 @@
         }
 
         /* ==========================================================================
-           💎 VIEW: SUBSCRIPTION (MARKETING DRIVEN)
+           💎 VIEW: SUBSCRIPTION
            ========================================================================== */
         .subs-wrapper {
             display: flex;
@@ -549,7 +541,7 @@
         .sub-box:not(.gold-border) .btn-subscribe { background: var(--accent-emerald); color: white; }
 
         /* ==========================================================================
-           👤 VIEW: PROFILE & HYDRATION CALCULATOR
+           👤 VIEW: PROFILE & CALCULATOR
            ========================================================================== */
         .dashboard-card {
             background: var(--bg-surface);
@@ -606,7 +598,6 @@
             padding: 40px 20px;
             color: var(--text-muted);
         }
-        .empty-state i { margin-bottom: 12px; color: var(--border-color); }
     </style>
 </head>
 <body>
@@ -746,7 +737,6 @@
                     <p style="font-size:0.8rem; color:var(--text-muted);">Tu consumo de agua ideal:</p>
                     <h3 style="font-size:1.5rem; color:var(--accent-emerald); margin:4px 0;" id="water-result">2.4 Litros / día</h3>
                 </div>
-
                 <div id="calc-recommendation-box" style="margin-top:10px;"></div>
             </div>
         </div>
@@ -769,17 +759,12 @@
     </nav>
 
     <script>
-        // Inicializar el entorno de la SDK de Telegram
         const tg = window.Telegram.WebApp;
         tg.expand();
         tg.ready();
 
-        // Alias del chat privado de soporte de Santos (Modificar por tu bot o cuenta)
         const SANTOS_TELEGRAM_USER = "Airdayz";
 
-        // ==========================================================================
-        // 📦 DATASETS COMPLETO (15 PRODUCTOS OMNILIFE + 3 PACKS PREMIUM)
-        // ==========================================================================
         const OMNILIFE_PRODUCTS = [
             { id: 1, title: "Magnus Supreme", category: "Energía", desc: "Aporta de 5 a 6 horas de energía limpia continuada. Combate la fatiga.", price: 34, oldPrice: 42, label: "Populares", img: "https://images.unsplash.com/photo-1512290923902-8a9f81dc236c?w=400" },
             { id: 2, title: "Biocros", category: "Energía", desc: "Estimula el cerebro, mejora el estado de alerta y la concentración.", price: 32, oldPrice: null, label: "Nuevos", img: "https://images.unsplash.com/photo-1543428802-19bc3673428a?w=400" },
@@ -804,9 +789,6 @@
             { id: "pack-bienestar", title: "Pack Bienestar Diario", price: 35, oldPrice: 49, perks: ["OmniPlus Antioxidante Mensual", "E-Book de Recetas Saludables", "Canal de Soporte de Dudas Diario"], bg: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=600", gold: false }
         ];
 
-        // ==========================================================================
-        // 🧠 LOCAL MANAGEMENT STATE CONTROLLER
-        // ==========================================================================
         let state = {
             currentView: 'home',
             favorites: JSON.parse(localStorage.getItem('golden_favs')) || [],
@@ -816,33 +798,27 @@
             searchQuery: ''
         };
 
-        // Posicionamiento de índices de carruseles
-        const carouselIndices = { popular: 0, energy: 0, new: 0 };
-
-        // ==========================================================================
-        // 🛠️ INITIALIZATION & TG USER SYNCHRONIZATION
-        // ==========================================================================
         document.addEventListener("DOMContentLoaded", () => {
             syncTelegramUser();
             checkHabitDateRefresh();
             renderAllViews();
+            renderStoreGrid(); // Forzado de arranque
             calculateHealthMetrics();
-            lucide.createIcons();
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
         });
 
         function syncTelegramUser() {
-            // Verificar si tenemos datos reales del InitData de Telegram
             const user = tg.initDataUnsafe?.user;
             const username = user?.username ? `@${user.username}` : "@UsuarioGolden";
             const fullName = user?.first_name ? `${user.first_name} ${user.last_name || ''}` : "Usuario Invitado";
             const userId = user?.id ? `ID: ${user.id}` : "ID: Modo Local Prototipo";
             
-            // Inyectar en interfaz
             document.getElementById('header-username').innerText = username;
             document.getElementById('profile-name').innerText = fullName;
             document.getElementById('profile-id').innerText = userId;
 
-            // Procesar Avatar con Fallback
             const avatarBoxHeader = document.getElementById('header-avatar');
             const avatarBoxProfile = document.getElementById('profile-avatar');
             const initials = fullName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
@@ -857,42 +833,27 @@
             }
         }
 
-        // ==========================================================================
-        // 🔄 RENDERING PIPELINES & VIEWS GENERATORS
-        // ==========================================================================
         function renderAllViews() {
-            // 1. Renderizar Carruseles Dinámicos en la Home
             renderCarousel('popular', OMNILIFE_PRODUCTS.filter(p => p.label === 'Populares'));
             renderCarousel('energy', OMNILIFE_PRODUCTS.filter(p => p.category === 'Energía'));
             renderCarousel('new', OMNILIFE_PRODUCTS.filter(p => p.label === 'Nuevos'));
-
-            // 2. Renderizar Tienda Principal
-            renderStoreGrid();
-
-            // 3. Renderizar Página de Suscripciones
             renderSubscriptions();
-
-            // 4. Actualizar contadores globales y estados visuales
             updateGlobalBadges();
         }
 
         function switchView(viewId) {
-            // Cerrar dropdown por seguridad
             document.getElementById('dropdown-box').classList.remove('open');
-            
-            // Alternar clases activas de la sección
             document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
             document.getElementById(`view-${viewId}`).classList.add('active');
 
-            // Alternar pestañas del menú inferior
             document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
             const activeTab = document.getElementById(`tab-${viewId}`);
             if (activeTab) activeTab.classList.add('active');
 
             state.currentView = viewId;
 
-            // Si entra a favoritos o perfil, repintar para actualizar datos cambiantes
             if (viewId === 'favorites') renderFavoritesGrid();
+            if (viewId === 'store') renderStoreGrid();
             if (viewId === 'profile') {
                 document.getElementById('stat-streak').innerText = `${state.streak} Días`;
                 document.getElementById('stat-favs').innerText = `${state.favorites.length} Items`;
@@ -900,12 +861,6 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // ==========================================================================
-        // 🎪 ENGINE: CAROUSELS CONTROLLER
-        // ==========================================================================
-        // ==========================================================================
-        // 🎪 ENGINE: CAROUSELS CONTROLLER (SWIPE & BUTTONS COMPATIBLE)
-        // ==========================================================================
         function renderCarousel(type, productsList) {
             const track = document.getElementById(`track-${type}`);
             track.innerHTML = productsList.map(p => `
@@ -921,25 +876,16 @@
         }
 
         function moveCarousel(type, direction) {
-            // Buscamos el contenedor padre que es el que ahora tiene el scroll físico
             const container = document.getElementById(`track-${type}`).parentElement;
-            const itemWidth = 172; // 160px de tarjeta + 12px de separación (gap)
-            
-            // Calculamos el desplazamiento sumando o restando el tamaño de una tarjeta
+            const itemWidth = 172;
             container.scrollLeft += direction * itemWidth;
-            
-            // Retroalimentación táctil leve en Telegram al pulsar las flechas
             if (window.Telegram && tg.HapticFeedback) {
                 tg.HapticFeedback.impactOccurred("light");
             }
         }
 
-        // ==========================================================================
-        // 🛒 ENGINE: STORE & PRODUCTS RENDERING CARD MODEL
-        // ==========================================================================
         function createProductCardHTML(p) {
             const isFav = state.favorites.includes(p.id);
-            // Si es favorito, le inyectamos la clase 'is-fav' directamente al renderizar
             return `
                 <div class="product-card" data-id="${p.id}">
                     ${p.label ? `<span class="p-badge">${p.label}</span>` : ''}
@@ -966,60 +912,81 @@
             `;
         }
 
+        function renderStoreGrid() {
+            const container = document.getElementById('main-products-grid');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const filtered = OMNILIFE_PRODUCTS.filter(p => {
+                const matchCategory = state.activeCategory === 'all' || p.category === state.activeCategory;
+                const matchSearch = p.title.toLowerCase().includes(state.searchQuery.toLowerCase()) || 
+                                    p.desc.toLowerCase().includes(state.searchQuery.toLowerCase());
+                return matchCategory && matchSearch;
+            });
+
+            if (filtered.length > 0) {
+                container.innerHTML = filtered.map(p => createProductCardHTML(p)).join('');
+            } else {
+                container.innerHTML = `
+                    <div class="empty-state" style="grid-column: span 2; width: 100%;">
+                        <i data-lucide="alert-circle" style="width:36px; height:36px; margin:0 auto 10px;"></i>
+                        <p>No se encontraron productos.</p>
+                    </div>
+                `;
+            }
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
         function renderFavoritesGrid() {
             const container = document.getElementById('favorites-products-grid');
-            // Filtrar del array maestro solo los IDs guardados en el estado local
             const favProducts = OMNILIFE_PRODUCTS.filter(p => state.favorites.includes(p.id));
 
             container.innerHTML = favProducts.length ? favProducts.map(p => createProductCardHTML(p)).join('') : `
                 <div class="empty-state" style="grid-column: span 2; width:100%;">
-                    <i data-lucide="heart-off" style="width:40px; height:40px;"></i>
+                    <i data-lucide="heart-off" style="width:40px; height:40px; margin:0 auto 10px;"></i>
                     <p>Tu lista de favoritos está vacía.</p>
                     <button class="tag-btn" style="margin-top:12px; background:var(--accent-emerald); color:white; border:none;" onclick="switchView('store')">Ir a la Tienda</button>
                 </div>
             `;
-            // Re-renderizar iconos de Lucide para la vista de favoritos
-            lucide.createIcons();
+            if (typeof lucide !== 'undefined') lucide.createIcons();
         }
 
-        // ==========================================================================
-        // 💾 INTERACTION, FAVORITES CORE & LOCALSTORAGE MOTOR
-        // ==========================================================================
         function toggleFavorite(id, event) {
             event.stopPropagation();
             const index = state.favorites.indexOf(id);
             const button = event.currentTarget;
             
             if (index === -1) {
-                // 1. Añadir al array de favoritos
                 state.favorites.push(id);
                 button.classList.add('is-fav');
                 if (window.Telegram && tg.HapticFeedback) tg.HapticFeedback.impactOccurred("light");
             } else {
-                // 2. Quitar del array de favoritos
                 state.favorites.splice(index, 1);
                 button.classList.remove('is-fav');
                 if (window.Telegram && tg.HapticFeedback) tg.HapticFeedback.impactOccurred("light");
             }
             
-            // 3. Guardar el estado en el almacenamiento del dispositivo móvil
             localStorage.setItem('golden_favs', JSON.stringify(state.favorites));
-            
-            // 4. Actualizar el contador flotante del menú inferior
             updateGlobalBadges();
 
-            // 5. Gestión inteligente de vistas en tiempo real
             if (state.currentView === 'favorites') {
-                // Si estamos en la pestaña favoritos, redibujamos la grilla para que el producto desaparezca suavemente
                 renderFavoritesGrid();
-            } else if (state.currentView === 'home') {
-                // Si estamos en la home, sincronizamos el estado de la tienda principal por detrás
+            } else {
                 renderStoreGrid();
             }
-            
-            // Forzar actualización visual instantánea de los estilos del SVG gracias al cambio de clase
-            lucide.createIcons();
         }
+
+        function updateGlobalBadges() {
+            const count = state.favorites.length;
+            const badge = document.getElementById('global-badge-count');
+            if (count > 0) {
+                badge.innerText = count;
+                badge.style.display = 'block';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
         function filterCategory(cat) {
             state.activeCategory = cat;
             document.querySelectorAll('.tag-btn').forEach(b => b.classList.remove('active'));
@@ -1035,9 +1002,6 @@
             renderStoreGrid();
         }
 
-        // ==========================================================================
-        // 💎 ENGINE: SUBSCRIPTION MARKETING RENDERING
-        // ==========================================================================
         function renderSubscriptions() {
             const container = document.getElementById('subscription-container');
             container.innerHTML = OMNILIFE_SUBSCRIPTIONS.map(s => `
@@ -1057,57 +1021,19 @@
                     </div>
                 </div>
             `).join('');
-            lucide.createIcons();
+            if (typeof lucide !== 'undefined') lucide.createIcons();
         }
 
-        // ==========================================================================
-        // 💾 INTERACTION, FAVORITES CORE & LOCALSTORAGE MOTOR
-        // ==========================================================================
-        function toggleFavorite(id, event) {
-            event.stopPropagation();
-            const index = state.favorites.indexOf(id);
-            if (index === -1) {
-                state.favorites.push(id);
-            } else {
-                state.favorites.splice(index, 1);
-            }
-            localStorage.setItem('golden_favs', JSON.stringify(state.favorites));
-            updateGlobalBadges();
-
-            // Sincronizar UI del botón pulsado
-            const target = event.currentTarget;
-            target.classList.toggle('is-fav');
-
-            // Si está en la vista favoritos, repintar la grilla completa al eliminar
-            if (state.currentView === 'favorites') renderFavoritesGrid();
-        }
-
-        function updateGlobalBadges() {
-            const count = state.favorites.length;
-            const badge = document.getElementById('global-badge-count');
-            if (count > 0) {
-                badge.innerText = count;
-                badge.style.display = 'block';
-            } else {
-                badge.style.display = 'none';
-            }
-        }
-
-        // ==========================================================================
-        // 🎯 ENGINE: GAMIFICATION & DAILY HABIT CONTROLLER
-        // ==========================================================================
         function checkHabitDateRefresh() {
             const todayStr = new Date().toDateString();
             if (state.habitsCheck.date !== todayStr) {
-                // Si cambió el día, evaluamos si completó todo ayer para mantener o resetear racha
                 if (state.habitsCheck.date !== '') {
                     const compl = state.habitsCheck.water && state.habitsCheck.walk && state.habitsCheck.supplement;
                     if (!compl) {
-                        state.streak = 0; // Rompió la racha
+                        state.streak = 0;
                         localStorage.setItem('golden_streak', 0);
                     }
                 }
-                // Reset diario
                 state.habitsCheck = { date: todayStr, water: false, walk: false, supplement: false };
                 localStorage.setItem('golden_habits', JSON.stringify(state.habitsCheck));
             }
@@ -1120,16 +1046,15 @@
             localStorage.setItem('golden_habits', JSON.stringify(state.habitsCheck));
             updateHabitCheckboxesUI();
 
-            // Verificar si acaba de completar todos los hábitos hoy
             const allDone = state.habitsCheck.water && state.habitsCheck.walk && state.habitsCheck.supplement;
             if (allDone) {
                 state.streak += 1;
                 localStorage.setItem('golden_streak', state.streak);
                 document.getElementById('streak-num').innerText = state.streak;
-                tg.HapticFeedback.notificationOccurred("success");
+                if (window.Telegram && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
                 alert("🎉 ¡Increíble! Has completado tus hábitos de hoy. Sigue así.");
             } else {
-                tg.HapticFeedback.impactOccurred("light");
+                if (window.Telegram && tg.HapticFeedback) tg.HapticFeedback.impactOccurred("light");
             }
         }
 
@@ -1145,33 +1070,28 @@
                     el.innerHTML = '';
                 }
             }
-            lucide.createIcons();
+            if (typeof lucide !== 'undefined') lucide.createIcons();
         }
 
-        // ==========================================================================
-        // 👤 BIOMETRIC ENGINE: CALCULATOR BY WEIGHT
-        // ==========================================================================
         function calculateHealthMetrics() {
             const weight = document.getElementById('calc-weight-range').value;
             document.getElementById('weight-lbl').innerText = `${weight} kg`;
 
-            // Algoritmo internacional: 35ml por cada Kg de peso corporal
             const liters = ((weight * 35) / 1000).toFixed(1);
             document.getElementById('water-result').innerText = `${liters} Litros / día`;
 
-            // Sistema Inteligente de recomendación de Producto Omnilife según biotipo
             const recBox = document.getElementById('calc-recommendation-box');
-            let recommendedProduct = OMNILIFE_PRODUCTS[4]; // Teatino Limón por defecto para peso estándar
+            let recommendedProduct = OMNILIFE_PRODUCTS[4]; 
             
             if (weight > 85) {
-                recommendedProduct = OMNILIFE_PRODUCTS[8]; // Fiber'N Plus para metabolismos pesados
+                recommendedProduct = OMNILIFE_PRODUCTS[8]; 
             } else if (weight < 60) {
-                recommendedProduct = OMNILIFE_PRODUCTS[2]; // Power Maker para tonificar estructuras ligeras
+                recommendedProduct = OMNILIFE_PRODUCTS[2]; 
             }
 
             recBox.innerHTML = `
                 <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:8px;">Suplemento ideal recomendado para tu rango de peso:</p>
-                <div style="background:rgba(255,255,255,0.02); border:1px solid var(--border-color); padding:10px; border-radius:var(--radius-md); display:flex; align-items:center; justify-content:between; gap:10px;">
+                <div style="background:rgba(255,255,255,0.02); border:1px solid var(--border-color); padding:10px; border-radius:var(--radius-md); display:flex; align-items:center; justify-content:space-between; gap:10px;">
                     <img src="${recommendedProduct.img}" style="width:45px; height:45px; object-fit:cover; border-radius:6px;">
                     <div style="flex:1;">
                         <h5 style="font-size:0.85rem; font-weight:700;">${recommendedProduct.title}</h5>
@@ -1180,34 +1100,28 @@
                     <button class="tag-btn" style="padding:6px 12px; font-size:0.7rem; background:var(--accent-emerald); color:white; border:none;" onclick="switchView('store')">Ver</button>
                 </div>
             `;
+            if (typeof lucide !== 'undefined') lucide.createIcons();
         }
 
-        // ==========================================================================
-        // 🚀 PIPELINE DE SALIDA: API SHARE & CONTACT INTEGRATION
-        // ==========================================================================
         function triggerOrderPurchase(productTitle, price) {
-            tg.HapticFeedback.impactOccurred("medium");
+            if (window.Telegram && tg.HapticFeedback) tg.HapticFeedback.impactOccurred("medium");
             const baseText = `Hola Santos, acabo de ver tu catálogo en la Web App y quiero realizar el pedido del siguiente producto:\n\n📦 *${productTitle}*\n💰 Precio: ${price}€\n\nPor favor, indícame los pasos para el envío de mi suplemento.`;
             const secureUrl = `https://t.me/share/url?url=${encodeURIComponent('https://t.me/' + SANTOS_TELEGRAM_USER)}&text=${encodeURIComponent(baseText)}`;
             tg.openTelegramLink(secureUrl);
         }
 
         function triggerSubscriptionPurchase(packTitle) {
-            tg.HapticFeedback.notificationOccurred("success");
+            if (window.Telegram && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
             const baseText = `¡Hola Santos! Quiero dar un salto en mi salud y suscribirme a tu plan mensual:\n\n💎 *${packTitle}*\n\nQuiero agendar mi sesión de asesoría inicial y activar los envíos recurrentes automáticos.`;
             const secureUrl = `https://t.me/share/url?url=${encodeURIComponent('https://t.me/' + SANTOS_TELEGRAM_USER)}&text=${encodeURIComponent(baseText)}`;
             tg.openTelegramLink(secureUrl);
         }
 
-        // ==========================================================================
-        // 🎛️ MISCELLANEOUS INTERFACES CONTROL
-        // ==========================================================================
         function toggleDropdown(event) {
             event.stopPropagation();
             document.getElementById('dropdown-box').classList.toggle('open');
         }
 
-        // Cerrar dropdown al hacer click fuera del mismo
         document.addEventListener('click', () => {
             document.getElementById('dropdown-box').classList.remove('open');
         });
