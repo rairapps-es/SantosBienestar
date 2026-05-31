@@ -857,7 +857,11 @@
         walk: false,
         supplement: false,
         completed: false // Bloqueador diario activo
-    }
+    },
+
+    // 🔍 VARIABLES ESENCIALES PARA QUE FUNCIONE LA TIENDA (FALTABAN AQUÍ):
+    activeCategory: 'all',  // Controla qué categoría está seleccionada (por defecto todas)
+    searchQuery: ''         // Controla el texto escrito en el buscador (por defecto vacío)
 };
 
         document.addEventListener("DOMContentLoaded", () => {
@@ -1112,29 +1116,50 @@
         }
 
         function renderStoreGrid() {
-            const container = document.getElementById('main-products-grid');
-            if (!container) return;
-            container.innerHTML = '';
+    const container = document.getElementById('main-products-grid');
+    if (!container) return;
+    container.innerHTML = '';
 
-            const filtered = OMNILIFE_PRODUCTS.filter(p => {
-                const matchCategory = state.activeCategory === 'all' || p.category === state.activeCategory;
-                const matchSearch = p.title.toLowerCase().includes(state.searchQuery.toLowerCase()) || 
-                                    p.desc.toLowerCase().includes(state.searchQuery.toLowerCase());
-                return matchCategory && matchSearch;
-            });
+    // 🛡️ Valores de control limpios
+    const activeCat = (state.activeCategory || 'all').toLowerCase().trim();
+    const query = (state.searchQuery || '').toLowerCase().trim();
 
-            if (filtered.length > 0) {
-                container.innerHTML = filtered.map(p => createProductCardHTML(p)).join('');
-            } else {
-                container.innerHTML = `
-                    <div class="empty-state" style="grid-column: span 2; width: 100%;">
-                        <i data-lucide="alert-circle" style="width:36px; height:36px; margin:0 auto 10px;"></i>
-                        <p>No se encontraron productos.</p>
-                    </div>
-                `;
-            }
-            if (typeof lucide !== 'undefined') lucide.createIcons();
-        }
+    if (typeof OMNILIFE_PRODUCTS === 'undefined' || !OMNILIFE_PRODUCTS.length) {
+        container.innerHTML = `<p style="padding:20px; text-align:center;">Error: No hay productos cargados.</p>`;
+        return;
+    }
+
+    // Función auxiliar para quitar acentos y dejar el texto limpio (ej: "Energía" -> "energia")
+    const cleanText = (text) => {
+        return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+    };
+
+    const filtered = OMNILIFE_PRODUCTS.filter(p => {
+        // 🌟 Normalizamos ambas categorías para que "Energía" coincida con "energia" o "Energía"
+        const productCatClean = cleanText(p.category || '');
+        const activeCatClean = cleanText(activeCat);
+
+        const matchCategory = activeCatClean === 'all' || productCatClean === activeCatClean;
+        
+        const pTitle = cleanText(p.title || '');
+        const pDesc = cleanText(p.desc || '');
+        const matchSearch = pTitle.includes(query) || pDesc.includes(query);
+        
+        return matchCategory && matchSearch;
+    });
+
+    if (filtered.length > 0) {
+        container.innerHTML = filtered.map(p => createProductCardHTML(p)).join('');
+    } else {
+        container.innerHTML = `
+            <div class="empty-state" style="grid-column: span 2; width: 100%;">
+                <i data-lucide="alert-circle" style="width:36px; height:36px; margin:0 auto 10px;"></i>
+                <p>No se encontraron productos en la categoría ${state.activeCategory}.</p>
+            </div>
+        `;
+    }
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
 
         function renderFavoritesGrid() {
             const container = document.getElementById('favorites-products-grid');
@@ -1302,19 +1327,60 @@
             if (typeof lucide !== 'undefined') lucide.createIcons();
         }
 
-        function triggerOrderPurchase(productTitle, price) {
-            if (window.Telegram && tg.HapticFeedback) tg.HapticFeedback.impactOccurred("medium");
-            const baseText = `Hola Santos, acabo de ver tu catálogo en la Web App y quiero realizar el pedido del siguiente producto:\n\n📦 *${productTitle}*\n💰 Precio: ${price}€\n\nPor favor, indícame los pasos para el envío de mi suplemento.`;
-            const secureUrl = `https://t.me/share/url?url=${encodeURIComponent('https://t.me/' + SANTOS_TELEGRAM_USER)}&text=${encodeURIComponent(baseText)}`;
-            tg.openTelegramLink(secureUrl);
-        }
+        function triggerOrderPurchase(title, price) {
+    // 1. ⚠️ Pon aquí el alias de Telegram de Santos (sin el @)
+    const tuUsuarioTelegram = "Airdayz"; 
+
+    // 2. Creamos el mensaje limpio (quitamos los asteriscos de negrita para evitar fallos de URL)
+    const mensaje = `¡Hola Santos! 👋 Quiero realizar un pedido:\n\n` +
+                    `📦 Producto: ${title}\n` +
+                    `💰 Precio: ${price}€\n\n` +
+                    `¿Me indicas cómo realizar el pago para recibirlo? ¡Gracias!`;
+
+    // 3. Codificación de seguridad obligatoria
+    const mensajeCodificado = encodeURIComponent(mensaje);
+
+    // 4. Enlace de redirección profunda
+    const urlTelegram = `https://t.me/${tuUsuarioTelegram}?text=${mensajeCodificado}`;
+
+    // 5. Usamos la variable corta 'tg' si está disponible, o la larga como respaldo
+    const webApp = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
+
+    // Vibración en el móvil al pulsar el botón de comprar
+    if (webApp && webApp.HapticFeedback) {
+        webApp.HapticFeedback.impactOccurred("medium");
+    }
+
+    // 6. Transición limpia hacia el chat privado
+    if (webApp) {
+        webApp.openTelegramLink(urlTelegram);
+    } else {
+        window.open(urlTelegram, '_blank');
+    }
+}
 
         function triggerSubscriptionPurchase(packTitle) {
-            if (window.Telegram && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
-            const baseText = `¡Hola Santos! Quiero dar un salto en mi salud y suscribirme a tu plan mensual:\n\n💎 *${packTitle}*\n\nQuiero agendar mi sesión de asesoría inicial y activar los envíos recurrentes automáticos.`;
-            const secureUrl = `https://t.me/share/url?url=${encodeURIComponent('https://t.me/' + SANTOS_TELEGRAM_USER)}&text=${encodeURIComponent(baseText)}`;
-            tg.openTelegramLink(secureUrl);
-        }
+    // 1. Efecto háptico premium de éxito al pulsar la suscripción
+    if (window.Telegram && tg.HapticFeedback) {
+        tg.HapticFeedback.notificationOccurred("success");
+    }
+
+    // 2. Definimos el nombre de usuario (limpiamos los asteriscos del texto para evitar fallos de URL)
+    const usuarioTelegram = SANTOS_TELEGRAM_USER; 
+    const baseText = `¡Hola Santos! Quiero dar un salto en mi salud y suscribirme a tu plan mensual:\n\n💎 Plan: ${packTitle}\n\nQuiero agendar mi sesión de asesoría inicial y activar los envíos recurrentes automáticos.`;
+
+    // 3. 🚨 CORRECCIÓN CLAVE: Construimos el enlace de chat privado directo en lugar de un enlace de "compartir"
+    const mensajeCodificado = encodeURIComponent(baseText);
+    const urlDirecta = `https://t.me/${usuarioTelegram}?text=${mensajeCodificado}`;
+
+    // 4. Transición limpia e inmediata dentro de la interfaz de Telegram
+    if (window.Telegram && tg.openTelegramLink) {
+        tg.openTelegramLink(urlDirecta);
+    } else {
+        // Respaldo por si se abre fuera de la aplicación de Telegram
+        window.open(urlDirecta, '_blank');
+    }
+}
 
         function toggleDropdown(event) {
             event.stopPropagation();
