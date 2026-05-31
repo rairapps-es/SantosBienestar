@@ -995,9 +995,12 @@
         // 🌟 LISTA DE SUSCRIPTORES VIP (Actualizar manualmente aquí)
 // Puedes añadir tantos IDs como quieras de forma estructurada
 const VIP_SUBSCRIBERS_LIST = {
-    "123456789": { active: true,  expiryDate: "15/12/2026", planName: "Plan Premium Oro" },
-    "987654321": { active: false, expiryDate: "01/05/2026", planName: "Plan Básico Mensual" },
-    "554433221": { active: true,  expiryDate: "28/02/2027", planName: "Plan Vitalicio" }
+    // 🌟 Almacenamos un array de planes activos en lugar de un solo string
+    "1320417199": { 
+        active: true,  
+        expiryDate: "15/12/2026", 
+        plans: ["Pack Energía Total", "Pack Control de Peso"] // Usamos un Array
+    }
 };
 
 /**
@@ -1856,7 +1859,10 @@ function renderSubscriptionCards() {
     container.innerHTML = OMNILIFE_SUBSCRIPTIONS.map(pack => {
         // Comprobar si ESTE pack específico es el que el usuario tiene activo
         // (Asociamos el título del pack con el planName de tu lista manual)
-        const isThisPackActive = vipInfo.isVip && (activePlanName === pack.title);
+        // 🌟 Verifica si el paquete actual está incluido en el array de planes del usuario
+const currentTelegramId = tg.initDataUnsafe?.user?.id?.toString();
+const userPlans = VIP_SUBSCRIBERS_LIST[currentTelegramId]?.plans || [];
+const isThisPackActive = vipInfo.isVip && userPlans.includes(pack.title);
 
         let cardStyle = "";
         let badgeHTML = "";
