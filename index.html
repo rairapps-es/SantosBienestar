@@ -992,13 +992,15 @@
         balance: 100, 
         role: "user", 
         range: 1,
-        // Lee los puntos guardados o empieza en 0 si es un nuevo usuario
         pointsProgress: parseInt(localStorage.getItem('golden_points')) || 0,
         seed: "carlos",
         isVipMember: false, 
         equipped: { clothing: "", glasses: "" }
     },
-    favorites: [], 
+    
+    // 🌟 CORRECCIÓN AQUÍ: Carga los favoritos del LocalStorage al arrancar
+    favorites: JSON.parse(localStorage.getItem('golden_favs')) || [], 
+    
     history: [], 
     systemLogs: [],
     purchasedItems: [],
@@ -1011,7 +1013,7 @@
         water: false,
         walk: false,
         supplement: false,
-        completed: false // Bloqueador diario activo
+        completed: false 
     },
 
     // VARIABLES ESENCIALES PARA LA TIENDA Y FILTROS:
@@ -1033,9 +1035,10 @@ document.addEventListener("DOMContentLoaded", () => {
         pointsEl.innerText = state.user.pointsProgress;
     }
     
-    // 4. Renderizar vistas, tienda y cálculos
+    // 4. Renderizar vistas, tienda, favoritos y cálculos
     renderAllViews();
     renderStoreGrid(); 
+    renderFavoritesGrid(); // 🌟 ¡Añadido aquí! Carga tus productos favoritos al iniciar la app
     calculateHealthMetrics();
     
     // 5. Inicializar iconos de Lucide si la librería está cargada
