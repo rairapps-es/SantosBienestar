@@ -1,0 +1,1170 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Método Santos - Hábitos & Suplementación</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* ==========================================================================
+           🎨 SYSTEM VARIABLES & THEME ADAPTATION
+           ========================================================================== */
+        :root {
+            --bg-primary: #0f172a;
+            --bg-surface: #1e293b;
+            --bg-surface-blur: rgba(30, 41, 59, 0.7);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-emerald: #10b981;
+            --accent-gold: #fbbf24;
+            --accent-danger: #ef4444;
+            --border-color: #334155;
+            --radius-xl: 24px;
+            --radius-lg: 16px;
+            --radius-md: 12px;
+            --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --safe-bottom: 16px;
+        }
+
+        /* Sincronización automática si Telegram provee colores de tema */
+        body.tg-theme {
+            --bg-primary: var(--tg-theme-bg-color, #0f172a);
+            --bg-surface: var(--tg-theme-secondary-bg-color, #1e293b);
+            --text-main: var(--tg-theme-text-color, #f8fafc);
+            --text-muted: var(--tg-theme-hint-color, #94a3b8);
+            --accent-emerald: var(--tg-theme-button-color, #10b981);
+            --border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        /* ==========================================================================
+           🚀 CORE STYLES & LAYOUT (SPA)
+           ========================================================================== */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+            font-family: var(--font-stack);
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            overflow-x: hidden;
+            padding-top: 70px;
+            padding-bottom: 90px;
+            min-height: 100vh;
+        }
+
+        .view-section {
+            display: none;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            padding: 16px;
+            max-width: 600px;
+            margin: 0 auto;
+            will-change: opacity, transform;
+        }
+
+        .view-section.active {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        h2.section-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* ==========================================================================
+           🔝 STICKY HEADER & DROPDOWN MENU
+           ========================================================================== */
+        header.sticky-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 65px;
+            background: var(--bg-surface-blur);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            z-index: 1000;
+        }
+
+        .profile-trigger {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+
+        .user-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--accent-emerald);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #white;
+            background: linear-gradient(135deg, #10b981, #059669);
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+        }
+
+        .user-meta h5 {
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        .user-meta p {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .menu-dots-btn {
+            background: none;
+            border: none;
+            color: var(--text-main);
+            cursor: pointer;
+            padding: 6px;
+        }
+
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            top: 60px;
+            right: 16px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            width: 180px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            z-index: 1010;
+            overflow: hidden;
+        }
+
+        .dropdown-menu.open { display: block; }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            color: var(--text-main);
+            text-decoration: none;
+            font-size: 0.9rem;
+            cursor: pointer;
+            background: none;
+            border: none;
+            width: 100%;
+            text-align: left;
+        }
+        .dropdown-item:hover { background: rgba(255,255,255,0.05); }
+
+        /* ==========================================================================
+           📱 BOTTOM NAVIGATION BAR
+           ========================================================================== */
+        nav.bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 70px;
+            background: var(--bg-surface-blur);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            padding-bottom: var(--safe-bottom);
+            z-index: 1000;
+        }
+
+        .nav-tab {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            background: none;
+            border: none;
+            font-size: 0.7rem;
+            font-weight: 500;
+            cursor: pointer;
+            position: relative;
+            width: 20%;
+            height: 100%;
+            gap: 4px;
+            transition: color 0.2s ease;
+        }
+
+        .nav-tab.active {
+            color: var(--accent-emerald);
+        }
+
+        .badge-count {
+            position: absolute;
+            top: 4px;
+            right: 20%;
+            background-color: var(--accent-danger);
+            color: white;
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 10px;
+            min-width: 18px;
+            text-align: center;
+        }
+
+        /* ==========================================================================
+           🏠 VIEW: HOME (HABITS, CAROUSELS)
+           ========================================================================== */
+        .habits-container {
+            background: var(--bg-surface);
+            border-radius: var(--radius-lg);
+            padding: 16px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 24px;
+        }
+
+        .streak-counter {
+            font-size: 0.85rem;
+            color: var(--accent-gold);
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .habit-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .habit-row:last-child { border-bottom: none; }
+
+        .habit-info { display: flex; align-items: center; gap: 10px; font-size: 0.9rem;}
+
+        .checkbox-custom {
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            border: 2px solid var(--border-color);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+        .checkbox-custom.checked {
+            background-color: var(--accent-emerald);
+            border-color: var(--accent-emerald);
+            color: white;
+        }
+
+        /* 🎪 CAROUSEL SLIDERS */
+        .carousel-section {
+            margin-bottom: 24px;
+            position: relative;
+        }
+        .carousel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .carousel-header h3 { font-size: 1.1rem; font-weight: 600; }
+        .carousel-controls { display: flex; gap: 8px; }
+        
+        .ctrl-btn {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .carousel-track-container {
+            overflow: hidden;
+            width: 100%;
+            border-radius: var(--radius-md);
+        }
+        .carousel-track {
+            display: flex;
+            gap: 12px;
+            transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+            will-change: transform;
+        }
+
+        .carousel-item-card {
+            flex: 0 0 160px;
+            background: var(--bg-surface);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            position: relative;
+        }
+
+        /* ==========================================================================
+           🛒 VIEW: STORE & GRID LAYOUT
+           ========================================================================== */
+        .store-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .search-bar-wrapper {
+            position: relative;
+            width: 100%;
+        }
+        .search-input {
+            width: 100%;
+            height: 45px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 0 16px 0 40px;
+            color: var(--text-main);
+            font-size: 0.9rem;
+            outline: none;
+        }
+        .search-bar-wrapper i {
+            position: absolute;
+            left: 14px;
+            top: 14px;
+            color: var(--text-muted);
+        }
+
+        .filter-tags {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            white-space: nowrap;
+            padding-bottom: 4px;
+        }
+        .filter-tags::-webkit-scrollbar { display: none; }
+        
+        .tag-btn {
+            padding: 8px 16px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .tag-btn.active {
+            background: var(--accent-emerald);
+            color: white;
+            border-color: var(--accent-emerald);
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        /* Product Card Master Blueprint */
+        .product-card {
+            background: var(--bg-surface);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            justify-content: space-between;
+            min-height: 290px;
+        }
+
+        .p-badge {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            background: var(--accent-danger);
+            color: white;
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 20px;
+            z-index: 10;
+        }
+
+        .p-fav-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(15, 23, 42, 0.6);
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: pointer;
+            z-index: 10;
+            backdrop-filter: blur(4px);
+        }
+        .p-fav-btn.is-fav i { fill: var(--accent-danger); stroke: var(--accent-danger); }
+
+        .p-img-box {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            background: #cbd5e1; /* Base Shimmer/Fallback */
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+        .p-img-box img { width: 100%; height: 100%; object-fit: cover; }
+
+        .p-title { font-size: 0.95rem; font-weight: 700; margin-bottom: 4px; }
+        .p-desc { font-size: 0.75rem; color: var(--text-muted); line-height: 1.3; margin-bottom: 8px; }
+        
+        .p-pricing { margin-top: auto; margin-bottom: 8px; }
+        .p-old-price { font-size: 0.75rem; color: var(--accent-danger); text-decoration: line-through; margin-right: 4px; }
+        .p-price { font-size: 1.05rem; font-weight: 700; color: var(--accent-emerald); }
+
+        .btn-buy {
+            width: 100%;
+            height: 36px;
+            background: var(--accent-emerald);
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        /* ==========================================================================
+           💎 VIEW: SUBSCRIPTION (MARKETING DRIVEN)
+           ========================================================================== */
+        .subs-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .sub-box {
+            position: relative;
+            border-radius: var(--radius-xl);
+            overflow: hidden;
+            padding: 24px;
+            min-height: 220px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            border: 2px solid var(--border-color);
+            background-size: cover;
+            background-position: center;
+            z-index: 1;
+        }
+        .sub-box::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to right, rgba(15,23,42,0.95) 40%, rgba(15,23,42,0.6));
+            z-index: -1;
+        }
+
+        .sub-box.gold-border { border-color: var(--accent-gold); }
+
+        .sub-title { font-size: 1.3rem; font-weight: 800; color: white; margin-bottom: 6px; }
+        .sub-perks { font-size: 0.8rem; color: #e2e8f0; list-style: none; margin-bottom: 14px; }
+        .sub-perks li { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+
+        .sub-footer-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: auto;
+        }
+
+        .btn-subscribe {
+            padding: 10px 20px;
+            background: var(--accent-gold);
+            color: #0f172a;
+            font-weight: 800;
+            font-size: 0.85rem;
+            border: none;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+        }
+        .sub-box:not(.gold-border) .btn-subscribe { background: var(--accent-emerald); color: white; }
+
+        /* ==========================================================================
+           👤 VIEW: PROFILE & HYDRATION CALCULATOR
+           ========================================================================== */
+        .dashboard-card {
+            background: var(--bg-surface);
+            border-radius: var(--radius-lg);
+            padding: 16px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 16px;
+        }
+
+        .profile-stat-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .stat-box {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 12px;
+            text-align: center;
+        }
+        .stat-box h6 { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; }
+        .stat-box p { font-size: 1.2rem; font-weight: 700; color: var(--accent-gold); margin-top: 4px; }
+
+        .calc-wrapper { display: flex; flex-direction: column; gap: 14px; }
+        .range-slider {
+            width: 100%;
+            -webkit-appearance: none;
+            height: 6px;
+            border-radius: 3px;
+            background: var(--border-color);
+            outline: none;
+        }
+        .range-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--accent-emerald);
+            cursor: pointer;
+        }
+
+        .calc-result-box {
+            background: rgba(16, 185, 129, 0.08);
+            border: 1px dashed var(--accent-emerald);
+            border-radius: var(--radius-md);
+            padding: 12px;
+            text-align: center;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+        }
+        .empty-state i { margin-bottom: 12px; color: var(--border-color); }
+    </style>
+</head>
+<body>
+
+    <header class="sticky-header">
+        <div class="profile-trigger" onclick="switchView('profile')">
+            <div id="header-avatar" class="user-avatar">U</div>
+            <div class="user-meta">
+                <h5 id="header-username">@Invitado</h5>
+                <p>Método Santos</p>
+            </div>
+        </div>
+        <button class="menu-dots-btn" onclick="toggleDropdown(event)">
+            <i data-lucide="more-vertical"></i>
+        </button>
+        <div id="dropdown-box" class="dropdown-menu">
+            <button class="dropdown-item" onclick="switchView('home')"><i data-lucide="home"></i> Inicio</button>
+            <button class="dropdown-item" onclick="switchView('store')"><i data-lucide="shopping-bag"></i> Tienda</button>
+            <button class="dropdown-item" onclick="switchView('subscription')"><i data-lucide="gem"></i> Suscripción</button>
+            <button class="dropdown-item" onclick="switchView('favorites')"><i data-lucide="heart"></i> Favoritos</button>
+            <button class="dropdown-item" onclick="switchView('profile')"><i data-lucide="user"></i> Mi Perfil</button>
+        </div>
+    </header>
+
+    <section id="view-home" class="view-section active">
+        <div class="habits-container">
+            <div class="streak-counter">
+                <i data-lucide="flame"></i> Racha Saludable: <span id="streak-num">0</span> días
+            </div>
+            <div class="habit-row">
+                <div class="habit-info"><i data-lucide="droplet" style="color:#38bdf8;"></i><span>¿Bebiste 2L de Agua?</span></div>
+                <div class="checkbox-custom" id="chk-water" onclick="toggleHabit('water')"></div>
+            </div>
+            <div class="habit-row">
+                <div class="habit-info"><i data-lucide="footprints" style="color:#4ade80;"></i><span>¿Caminaste 30 Minutos?</span></div>
+                <div class="checkbox-custom" id="chk-walk" onclick="toggleHabit('walk')"></div>
+            </div>
+            <div class="habit-row">
+                <div class="habit-info"><i data-lucide="pill" style="color:#f43f5e;"></i><span>¿Tomaste tu Omnilife?</span></div>
+                <div class="checkbox-custom" id="chk-supplement" onclick="toggleHabit('supplement')"></div>
+            </div>
+        </div>
+
+        <div class="carousel-section">
+            <div class="carousel-header">
+                <h3>🔥 Los Más Vendidos</h3>
+                <div class="carousel-controls">
+                    <button class="ctrl-btn" onclick="moveCarousel('popular', -1)"><i data-lucide="chevron-left"></i></button>
+                    <button class="ctrl-btn" onclick="moveCarousel('popular', 1)"><i data-lucide="chevron-right"></i></button>
+                </div>
+            </div>
+            <div class="carousel-track-container">
+                <div id="track-popular" class="carousel-track"></div>
+            </div>
+        </div>
+
+        <div class="carousel-section">
+            <div class="carousel-header">
+                <h3>⚡ Máxima Energía</h3>
+                <div class="carousel-controls">
+                    <button class="ctrl-btn" onclick="moveCarousel('energy', -1)"><i data-lucide="chevron-left"></i></button>
+                    <button class="ctrl-btn" onclick="moveCarousel('energy', 1)"><i data-lucide="chevron-right"></i></button>
+                </div>
+            </div>
+            <div class="carousel-track-container">
+                <div id="track-energy" class="carousel-track"></div>
+            </div>
+        </div>
+
+        <div class="carousel-section">
+            <div class="carousel-header">
+                <h3>✨ Incorporaciones Nuevas</h3>
+                <div class="carousel-controls">
+                    <button class="ctrl-btn" onclick="moveCarousel('new', -1)"><i data-lucide="chevron-left"></i></button>
+                    <button class="ctrl-btn" onclick="moveCarousel('new', 1)"><i data-lucide="chevron-right"></i></button>
+                </div>
+            </div>
+            <div class="carousel-track-container">
+                <div id="track-new" class="carousel-track"></div>
+            </div>
+        </div>
+    </section>
+
+    <section id="view-store" class="view-section">
+        <div class="store-controls">
+            <div class="search-bar-wrapper">
+                <i data-lucide="search"></i>
+                <input type="text" id="store-search" class="search-input" placeholder="Buscar suplemento..." oninput="filterStore()">
+            </div>
+            <div class="filter-tags">
+                <button class="tag-btn active" id="tag-all" onclick="filterCategory('all')">Todos</button>
+                <button class="tag-btn" id="tag-energy" onclick="filterCategory('Energía')">Energía</button>
+                <button class="tag-btn" id="tag-weight" onclick="filterCategory('Control Peso')">Control Peso</button>
+                <button class="tag-btn" id="tag-health" onclick="filterCategory('Salud General')">Salud General</button>
+            </div>
+        </div>
+        <div id="main-products-grid" class="products-grid"></div>
+    </section>
+
+    <section id="view-subscription" class="view-section">
+        <h2 class="section-title"><i data-lucide="gem" style="color:var(--accent-gold);"></i>Packs Mensuales Premium</h2>
+        <div class="subs-wrapper" id="subscription-container"></div>
+    </section>
+
+    <section id="view-favorites" class="view-section">
+        <h2 class="section-title"><i data-lucide="heart" style="color:var(--accent-danger);"></i>Mis Guardados</h2>
+        <div id="favorites-products-grid" class="products-grid"></div>
+    </section>
+
+    <section id="view-profile" class="view-section">
+        <div class="dashboard-card" style="display:flex; align-items:center; gap:16px;">
+            <div id="profile-avatar" class="user-avatar" style="width:55px; height:55px; font-size:1.3rem;">U</div>
+            <div>
+                <h3 id="profile-name">Usuario Invitado</h3>
+                <p id="profile-id" style="font-size:0.8rem; color:var(--text-muted);">ID: 00000000</p>
+            </div>
+        </div>
+
+        <div class="profile-stat-row">
+            <div class="stat-box">
+                <h6>Hábito Racha</h6>
+                <p id="stat-streak">0 Días</p>
+            </div>
+            <div class="stat-box">
+                <h6>Favoritos</h6>
+                <p id="stat-favs">0 Items</p>
+            </div>
+        </div>
+
+        <div class="dashboard-card">
+            <h4 style="margin-bottom:12px; display:flex; align-items:center; gap:6px;"><i data-lucide="calculator" style="color:var(--accent-emerald);"></i> Calculadora de Hidratación</h4>
+            <div class="calc-wrapper">
+                <label style="font-size:0.85rem; color:var(--text-muted);">Arrastra tu peso actual: <strong style="color:white;" id="weight-lbl">70 kg</strong></label>
+                <input type="range" id="calc-weight-range" class="range-slider" min="40" max="140" value="70" oninput="calculateHealthMetrics()">
+                
+                <div class="calc-result-box">
+                    <p style="font-size:0.8rem; color:var(--text-muted);">Tu consumo de agua ideal:</p>
+                    <h3 style="font-size:1.5rem; color:var(--accent-emerald); margin:4px 0;" id="water-result">2.4 Litros / día</h3>
+                </div>
+
+                <div id="calc-recommendation-box" style="margin-top:10px;"></div>
+            </div>
+        </div>
+    </section>
+
+    <nav class="bottom-nav">
+        <button class="nav-tab active" id="tab-home" onclick="switchView('home')">
+            <i data-lucide="home"></i><span>Inicio</span>
+        </button>
+        <button class="nav-tab" id="tab-store" onclick="switchView('store')">
+            <i data-lucide="shopping-bag"></i><span>Tienda</span>
+        </button>
+        <button class="nav-tab" id="tab-subscription" onclick="switchView('subscription')">
+            <i data-lucide="gem"></i><span>Planes</span>
+        </button>
+        <button class="nav-tab" id="tab-favorites" onclick="switchView('favorites')">
+            <i data-lucide="heart"></i><span>Favs</span>
+            <span id="global-badge-count" class="badge-count" style="display:none;">0</span>
+        </button>
+    </nav>
+
+    <script>
+        // Inicializar el entorno de la SDK de Telegram
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        tg.ready();
+
+        // Alias del chat privado de soporte de Santos (Modificar por tu bot o cuenta)
+        const SANTOS_TELEGRAM_USER = "MetodoSantosSoporte";
+
+        // ==========================================================================
+        // 📦 DATASETS COMPLETO (15 PRODUCTOS OMNILIFE + 3 PACKS PREMIUM)
+        // ==========================================================================
+        const OMNILIFE_PRODUCTS = [
+            { id: 1, title: "Magnus Supreme", category: "Energía", desc: "Aporta de 5 a 6 horas de energía limpia continuada. Combate la fatiga.", price: 34, oldPrice: 42, label: "Populares", img: "https://images.unsplash.com/photo-1512290923902-8a9f81dc236c?w=400" },
+            { id: 2, title: "Biocros", category: "Energía", desc: "Estimula el cerebro, mejora el estado de alerta y la concentración.", price: 32, oldPrice: null, label: "Nuevos", img: "https://images.unsplash.com/photo-1543428802-19bc3673428a?w=400" },
+            { id: 3, title: "Power Maker", category: "Salud General", desc: "Regenerador celular de alta gama. Fortalece tejidos y masa muscular.", price: 52, oldPrice: 65, label: "¡Últimas unidades!", img: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=400" },
+            { id: 4, title: "OmniPlus Gel", category: "Salud General", desc: "El rey de las defensas. Vitaminas micelizadas para absorción inmediata.", price: 46, oldPrice: null, label: "Populares", img: "https://images.unsplash.com/photo-1607619056574-7b8d304f3c6f?w=400" },
+            { id: 5, title: "Teatino Limón", category: "Control Peso", desc: "Termogénico inteligente. Quema grasa corporal usando tu propio calor.", price: 38, oldPrice: 46, label: "Populares", img: "https://images.unsplash.com/photo-1556881286-fc6915169721?w=400" },
+            { id: 6, title: "Cafetino de Olla", category: "Control Peso", desc: "Exquisito café que ayuda a metabolizar grasas y regular la glucosa.", price: 40, oldPrice: null, label: null, img: "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=400" },
+            { id: 7, title: "StarBien", category: "Salud General", desc: "Fórmula anti-estrés con fibra de manzana. Energía mental positiva.", price: 33, oldPrice: 40, label: "Nuevos", img: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=400" },
+            { id: 8, title: "Ego Plant", category: "Salud General", desc: "Extractos herbales silvestres para depurar y optimizar el sistema renal.", price: 29, oldPrice: null, label: null, img: "https://images.unsplash.com/photo-1611070973770-b1a60c2661f8?w=400" },
+            { id: 9, title: "Fiber'N Plus", category: "Control Peso", desc: "Limpieza digestiva profunda. Regula el tránsito y evita inflamación.", price: 42, oldPrice: 50, label: "¡Últimas unidades!", img: "https://images.unsplash.com/photo-1576086213369-97a306d36557?w=400" },
+            { id: 10, title: "Aloe Beta", category: "Salud General", desc: "Desintoxica, desinflama y cicatriza el organismo por dentro.", price: 26, oldPrice: null, label: "Populares", img: "https://images.unsplash.com/photo-1563483783225-bc3e4334360e?w=400" },
+            { id: 11, title: "Dual C Mix", category: "Salud General", desc: "Megadosis de Vitamina C con antioxidantes para una piel radiante.", price: 31, oldPrice: 38, label: "Nuevos", img: "https://images.unsplash.com/photo-1628243349411-e659b85c2b1a?w=400" },
+            { id: 12, title: "Super Mix", category: "Salud General", desc: "Batido completo proteico, ideal para desayunos o cenas rápidas.", price: 48, oldPrice: null, label: null, img: "https://images.unsplash.com/photo-1579954115545-a95591f28bfc?w=400" },
+            { id: 13, title: "Aqtúa Supreme", category: "Energía", desc: "Nutrición celular cardiovascular con Coenzima Q10 de alta potencia.", price: 55, oldPrice: 68, label: "¡Últimas unidades!", img: "https://images.unsplash.com/photo-1550572017-edd951b55104?w=400" },
+            { id: 14, title: "Shake Omnilife", category: "Control Peso", desc: "Sustituto de comida premium sabor cookies & cream para bajar grasa.", price: 49, oldPrice: 60, label: "Nuevos", img: "https://images.unsplash.com/photo-1553530666-ba11a7da3888?w=400" },
+            { id: 15, title: "Fem Plus", category: "Salud General", desc: "Equilibrio hormonal femenino de amplio espectro con extracto de lúpulo.", price: 35, oldPrice: null, label: "Populares", img: "https://images.unsplash.com/photo-1584017911766-d451b3d0e843?w=400" }
+        ];
+
+        const OMNILIFE_SUBSCRIPTIONS = [
+            { id: "pack-energia", title: "Pack Energía Total", price: 39, oldPrice: 55, perks: ["Magnus Supreme Mensual", "Asesoría 1-1 WhatsApp con Santos", "Grupo VIP de Retos 21 Días"], bg: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=600", gold: false },
+            { id: "pack-peso", title: "Pack Control de Peso", price: 49, oldPrice: 69, perks: ["Teatino Limón + Fiber'N Plus", "Pauta de Hábitos Semanal", "Seguimiento personalizado continuo"], bg: "https://images.unsplash.com/photo-1556881286-fc6915169721?w=600", gold: true },
+            { id: "pack-bienestar", title: "Pack Bienestar Diario", price: 35, oldPrice: 49, perks: ["OmniPlus Antioxidante Mensual", "E-Book de Recetas Saludables", "Canal de Soporte de Dudas Diario"], bg: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=600", gold: false }
+        ];
+
+        // ==========================================================================
+        // 🧠 LOCAL MANAGEMENT STATE CONTROLLER
+        // ==========================================================================
+        let state = {
+            currentView: 'home',
+            favorites: JSON.parse(localStorage.getItem('golden_favs')) || [],
+            habitsCheck: JSON.parse(localStorage.getItem('golden_habits')) || { date: '', water: false, walk: false, supplement: false },
+            streak: parseInt(localStorage.getItem('golden_streak')) || 0,
+            activeCategory: 'all',
+            searchQuery: ''
+        };
+
+        // Posicionamiento de índices de carruseles
+        const carouselIndices = { popular: 0, energy: 0, new: 0 };
+
+        // ==========================================================================
+        // 🛠️ INITIALIZATION & TG USER SYNCHRONIZATION
+        // ==========================================================================
+        document.addEventListener("DOMContentLoaded", () => {
+            syncTelegramUser();
+            checkHabitDateRefresh();
+            renderAllViews();
+            calculateHealthMetrics();
+            lucide.createIcons();
+        });
+
+        function syncTelegramUser() {
+            // Verificar si tenemos datos reales del InitData de Telegram
+            const user = tg.initDataUnsafe?.user;
+            const username = user?.username ? `@${user.username}` : "@UsuarioGolden";
+            const fullName = user?.first_name ? `${user.first_name} ${user.last_name || ''}` : "Usuario Invitado";
+            const userId = user?.id ? `ID: ${user.id}` : "ID: Modo Local Prototipo";
+            
+            // Inyectar en interfaz
+            document.getElementById('header-username').innerText = username;
+            document.getElementById('profile-name').innerText = fullName;
+            document.getElementById('profile-id').innerText = userId;
+
+            // Procesar Avatar con Fallback
+            const avatarBoxHeader = document.getElementById('header-avatar');
+            const avatarBoxProfile = document.getElementById('profile-avatar');
+            const initials = fullName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+
+            if (user?.photo_url) {
+                const imgHtml = `<img src="${user.photo_url}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
+                avatarBoxHeader.innerHTML = imgHtml;
+                avatarBoxProfile.innerHTML = imgHtml;
+            } else {
+                avatarBoxHeader.innerText = initials;
+                avatarBoxProfile.innerText = initials;
+            }
+        }
+
+        // ==========================================================================
+        // 🔄 RENDERING PIPELINES & VIEWS GENERATORS
+        // ==========================================================================
+        function renderAllViews() {
+            // 1. Renderizar Carruseles Dinámicos en la Home
+            renderCarousel('popular', OMNILIFE_PRODUCTS.filter(p => p.label === 'Populares'));
+            renderCarousel('energy', OMNILIFE_PRODUCTS.filter(p => p.category === 'Energía'));
+            renderCarousel('new', OMNILIFE_PRODUCTS.filter(p => p.label === 'Nuevos'));
+
+            // 2. Renderizar Tienda Principal
+            renderStoreGrid();
+
+            // 3. Renderizar Página de Suscripciones
+            renderSubscriptions();
+
+            // 4. Actualizar contadores globales y estados visuales
+            updateGlobalBadges();
+        }
+
+        function switchView(viewId) {
+            // Cerrar dropdown por seguridad
+            document.getElementById('dropdown-box').classList.remove('open');
+            
+            // Alternar clases activas de la sección
+            document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
+            document.getElementById(`view-${viewId}`).classList.add('active');
+
+            // Alternar pestañas del menú inferior
+            document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
+            const activeTab = document.getElementById(`tab-${viewId}`);
+            if (activeTab) activeTab.classList.add('active');
+
+            state.currentView = viewId;
+
+            // Si entra a favoritos o perfil, repintar para actualizar datos cambiantes
+            if (viewId === 'favorites') renderFavoritesGrid();
+            if (viewId === 'profile') {
+                document.getElementById('stat-streak').innerText = `${state.streak} Días`;
+                document.getElementById('stat-favs').innerText = `${state.favorites.length} Items`;
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // ==========================================================================
+        // 🎪 ENGINE: CAROUSELS CONTROLLER
+        // ==========================================================================
+        function renderCarousel(type, productsList) {
+            const track = document.getElementById(`track-${type}`);
+            track.innerHTML = productsList.map(p => `
+                <div class="carousel-item-card" onclick="switchView('store')">
+                    ${p.label ? `<span class="p-badge" style="font-size:0.55rem; padding:2px 6px;">${p.label}</span>` : ''}
+                    <div class="p-img-box" style="height:110px;">
+                        <img src="${p.img}" alt="${p.title}" loading="lazy">
+                    </div>
+                    <h5 style="font-size:0.8rem; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${p.title}</h5>
+                    <p style="font-size:0.8rem; font-weight:700; color:var(--accent-emerald);">${p.price}€</p>
+                </div>
+            `).join('');
+        }
+
+        function moveCarousel(type, direction) {
+            const track = document.getElementById(`track-${type}`);
+            const totalItems = track.children.length;
+            const itemWidth = 172; // Ancho del item (160px) + gap (12px)
+            const visibleWidth = track.parentElement.clientWidth;
+            const maxScroll = (totalItems * itemWidth) - visibleWidth;
+
+            carouselIndices[type] += direction * itemWidth;
+
+            if (carouselIndices[type] < 0) carouselIndices[type] = 0;
+            if (carouselIndices[type] > maxScroll) carouselIndices[type] = maxScroll;
+
+            track.style.transform = `translateX(-${carouselIndices[type]}px)`;
+        }
+
+        // ==========================================================================
+        // 🛒 ENGINE: STORE & PRODUCTS RENDERING CARD MODEL
+        // ==========================================================================
+        function createProductCardHTML(p) {
+            const isFav = state.favorites.includes(p.id);
+            return `
+                <div class="product-card">
+                    ${p.label ? `<span class="p-badge">${p.label}</span>` : ''}
+                    <button class="p-fav-btn ${isFav ? 'is-fav' : ''}" onclick="toggleFavorite(${p.id}, event)">
+                        <i data-lucide="heart" style="width:18px; height:18px;"></i>
+                    </button>
+                    <div>
+                        <div class="p-img-box">
+                            <img src="${p.img}" alt="${p.title}" loading="lazy">
+                        </div>
+                        <h4 class="p-title">${p.title}</h4>
+                        <p class="p-desc">${p.desc}</p>
+                    </div>
+                    <div>
+                        <div class="p-pricing">
+                            ${p.oldPrice ? `<span class="p-old-price">${p.oldPrice}€</span>` : ''}
+                            <span class="p-price">${p.price}€</span>
+                        </div>
+                        <button class="btn-buy" onclick="triggerOrderPurchase('${p.title}', ${p.price})">
+                            <i data-lucide="shopping-cart" style="width:14px; height:14px;"></i> Comprar Ahora
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderStoreGrid() {
+            const container = document.getElementById('main-products-grid');
+            const filtered = OMNILIFE_PRODUCTS.filter(p => {
+                const matchCategory = state.activeCategory === 'all' || p.category === state.activeCategory;
+                const matchSearch = p.title.toLowerCase().includes(state.searchQuery.toLowerCase()) || 
+                                    p.desc.toLowerCase().includes(state.searchQuery.toLowerCase());
+                return matchCategory && matchSearch;
+            });
+
+            container.innerHTML = filtered.length ? filtered.map(p => createProductCardHTML(p)).join('') : `
+                <div class="empty-state" style="grid-column: span 2;">
+                    <i data-lucide="alert-circle" style="width:36px; height:36px;"></i>
+                    <p>No se encontraron productos.</p>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        function renderFavoritesGrid() {
+            const container = document.getElementById('favorites-products-grid');
+            const favProducts = OMNILIFE_PRODUCTS.filter(p => state.favorites.includes(p.id));
+
+            container.innerHTML = favProducts.length ? favProducts.map(p => createProductCardHTML(p)).join('') : `
+                <div class="empty-state" style="grid-column: span 2; width:100%;">
+                    <i data-lucide="heart-off" style="width:40px; height:40px;"></i>
+                    <p>Tu lista de favoritos está vacía.</p>
+                    <button class="tag-btn" style="margin-top:12px; background:var(--accent-emerald); color:white;" onclick="switchView('store')">Ir a la Tienda</button>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        function filterCategory(cat) {
+            state.activeCategory = cat;
+            document.querySelectorAll('.tag-btn').forEach(b => b.classList.remove('active'));
+            if(cat === 'all') document.getElementById('tag-all').classList.add('active');
+            else if(cat === 'Energía') document.getElementById('tag-energy').classList.add('active');
+            else if(cat === 'Control Peso') document.getElementById('tag-weight').classList.add('active');
+            else if(cat === 'Salud General') document.getElementById('tag-health').classList.add('active');
+            renderStoreGrid();
+        }
+
+        function filterStore() {
+            state.searchQuery = document.getElementById('store-search').value;
+            renderStoreGrid();
+        }
+
+        // ==========================================================================
+        // 💎 ENGINE: SUBSCRIPTION MARKETING RENDERING
+        // ==========================================================================
+        function renderSubscriptions() {
+            const container = document.getElementById('subscription-container');
+            container.innerHTML = OMNILIFE_SUBSCRIPTIONS.map(s => `
+                <div class="sub-box ${s.gold ? 'gold-border' : ''}" style="background-image: url('${s.bg}');">
+                    <div>
+                        <h4 class="sub-title">${s.title}</h4>
+                        <ul class="sub-perks">
+                            ${s.perks.map(p => `<li><i data-lucide="check" style="width:14px; height:14px; color:var(--accent-emerald);"></i> ${p}</li>`).join('')}
+                        </ul>
+                    </div>
+                    <div class="sub-footer-row">
+                        <div>
+                            <span style="font-size:0.75rem; text-decoration:line-through; color:var(--accent-danger); display:block;">Antes ${s.oldPrice}€</span>
+                            <span style="font-size:1.3rem; font-weight:800; color:white;">${s.price}€<span style="font-size:0.8rem; font-weight:400; color:var(--text-muted);">/mes</span></span>
+                        </div>
+                        <button class="btn-subscribe" onclick="triggerSubscriptionPurchase('${s.title}')">Suscribirme</button>
+                    </div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        // ==========================================================================
+        // 💾 INTERACTION, FAVORITES CORE & LOCALSTORAGE MOTOR
+        // ==========================================================================
+        function toggleFavorite(id, event) {
+            event.stopPropagation();
+            const index = state.favorites.indexOf(id);
+            if (index === -1) {
+                state.favorites.push(id);
+            } else {
+                state.favorites.splice(index, 1);
+            }
+            localStorage.setItem('golden_favs', JSON.stringify(state.favorites));
+            updateGlobalBadges();
+
+            // Sincronizar UI del botón pulsado
+            const target = event.currentTarget;
+            target.classList.toggle('is-fav');
+
+            // Si está en la vista favoritos, repintar la grilla completa al eliminar
+            if (state.currentView === 'favorites') renderFavoritesGrid();
+        }
+
+        function updateGlobalBadges() {
+            const count = state.favorites.length;
+            const badge = document.getElementById('global-badge-count');
+            if (count > 0) {
+                badge.innerText = count;
+                badge.style.display = 'block';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        // ==========================================================================
+        // 🎯 ENGINE: GAMIFICATION & DAILY HABIT CONTROLLER
+        // ==========================================================================
+        function checkHabitDateRefresh() {
+            const todayStr = new Date().toDateString();
+            if (state.habitsCheck.date !== todayStr) {
+                // Si cambió el día, evaluamos si completó todo ayer para mantener o resetear racha
+                if (state.habitsCheck.date !== '') {
+                    const compl = state.habitsCheck.water && state.habitsCheck.walk && state.habitsCheck.supplement;
+                    if (!compl) {
+                        state.streak = 0; // Rompió la racha
+                        localStorage.setItem('golden_streak', 0);
+                    }
+                }
+                // Reset diario
+                state.habitsCheck = { date: todayStr, water: false, walk: false, supplement: false };
+                localStorage.setItem('golden_habits', JSON.stringify(state.habitsCheck));
+            }
+            document.getElementById('streak-num').innerText = state.streak;
+            updateHabitCheckboxesUI();
+        }
+
+        function toggleHabit(key) {
+            state.habitsCheck[key] = !state.habitsCheck[key];
+            localStorage.setItem('golden_habits', JSON.stringify(state.habitsCheck));
+            updateHabitCheckboxesUI();
+
+            // Verificar si acaba de completar todos los hábitos hoy
+            const allDone = state.habitsCheck.water && state.habitsCheck.walk && state.habitsCheck.supplement;
+            if (allDone) {
+                state.streak += 1;
+                localStorage.setItem('golden_streak', state.streak);
+                document.getElementById('streak-num').innerText = state.streak;
+                tg.HapticFeedback.notificationOccurred("success");
+                alert("🎉 ¡Increíble! Has completado tus hábitos de hoy. Sigue así.");
+            } else {
+                tg.HapticFeedback.impactOccurred("light");
+            }
+        }
+
+        function updateHabitCheckboxesUI() {
+            const map = { water: 'chk-water', walk: 'chk-walk', supplement: 'chk-supplement' };
+            for (let key in map) {
+                const el = document.getElementById(map[key]);
+                if (state.habitsCheck[key]) {
+                    el.classList.add('checked');
+                    el.innerHTML = '<i data-lucide="check" style="width:16px; height:16px;"></i>';
+                } else {
+                    el.classList.remove('checked');
+                    el.innerHTML = '';
+                }
+            }
+            lucide.createIcons();
+        }
+
+        // ==========================================================================
+        // 👤 BIOMETRIC ENGINE: CALCULATOR BY WEIGHT
+        // ==========================================================================
+        function calculateHealthMetrics() {
+            const weight = document.getElementById('calc-weight-range').value;
+            document.getElementById('weight-lbl').innerText = `${weight} kg`;
+
+            // Algoritmo internacional: 35ml por cada Kg de peso corporal
+            const liters = ((weight * 35) / 1000).toFixed(1);
+            document.getElementById('water-result').innerText = `${liters} Litros / día`;
+
+            // Sistema Inteligente de recomendación de Producto Omnilife según biotipo
+            const recBox = document.getElementById('calc-recommendation-box');
+            let recommendedProduct = OMNILIFE_PRODUCTS[4]; // Teatino Limón por defecto para peso estándar
+            
+            if (weight > 85) {
+                recommendedProduct = OMNILIFE_PRODUCTS[8]; // Fiber'N Plus para metabolismos pesados
+            } else if (weight < 60) {
+                recommendedProduct = OMNILIFE_PRODUCTS[2]; // Power Maker para tonificar estructuras ligeras
+            }
+
+            recBox.innerHTML = `
+                <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:8px;">Suplemento ideal recomendado para tu rango de peso:</p>
+                <div style="background:rgba(255,255,255,0.02); border:1px solid var(--border-color); padding:10px; border-radius:var(--radius-md); display:flex; align-items:center; justify-content:between; gap:10px;">
+                    <img src="${recommendedProduct.img}" style="width:45px; height:45px; object-fit:cover; border-radius:6px;">
+                    <div style="flex:1;">
+                        <h5 style="font-size:0.85rem; font-weight:700;">${recommendedProduct.title}</h5>
+                        <p style="font-size:0.7rem; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px;">${recommendedProduct.desc}</p>
+                    </div>
+                    <button class="tag-btn" style="padding:6px 12px; font-size:0.7rem; background:var(--accent-emerald); color:white; border:none;" onclick="switchView('store')">Ver</button>
+                </div>
+            `;
+        }
+
+        // ==========================================================================
+        // 🚀 PIPELINE DE SALIDA: API SHARE & CONTACT INTEGRATION
+        // ==========================================================================
+        function triggerOrderPurchase(productTitle, price) {
+            tg.HapticFeedback.impactOccurred("medium");
+            const baseText = `Hola Santos, acabo de ver tu catálogo en la Web App y quiero realizar el pedido del siguiente producto:\n\n📦 *${productTitle}*\n💰 Precio: ${price}€\n\nPor favor, indícame los pasos para el envío de mi suplemento.`;
+            const secureUrl = `https://t.me/share/url?url=${encodeURIComponent('https://t.me/' + SANTOS_TELEGRAM_USER)}&text=${encodeURIComponent(baseText)}`;
+            tg.openTelegramLink(secureUrl);
+        }
+
+        function triggerSubscriptionPurchase(packTitle) {
+            tg.HapticFeedback.notificationOccurred("success");
+            const baseText = `¡Hola Santos! Quiero dar un salto en mi salud y suscribirme a tu plan mensual:\n\n💎 *${packTitle}*\n\nQuiero agendar mi sesión de asesoría inicial y activar los envíos recurrentes automáticos.`;
+            const secureUrl = `https://t.me/share/url?url=${encodeURIComponent('https://t.me/' + SANTOS_TELEGRAM_USER)}&text=${encodeURIComponent(baseText)}`;
+            tg.openTelegramLink(secureUrl);
+        }
+
+        // ==========================================================================
+        // 🎛️ MISCELLANEOUS INTERFACES CONTROL
+        // ==========================================================================
+        function toggleDropdown(event) {
+            event.stopPropagation();
+            document.getElementById('dropdown-box').classList.toggle('open');
+        }
+
+        // Cerrar dropdown al hacer click fuera del mismo
+        document.addEventListener('click', () => {
+            document.getElementById('dropdown-box').classList.remove('open');
+        });
+    </script>
+</body>
+</html>
