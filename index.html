@@ -607,7 +607,7 @@
             <div id="header-avatar" class="user-avatar">U</div>
             <div class="user-meta">
                 <h5 id="header-username">@Invitado</h5>
-                <p>Método Santos</p>
+                <p>Santos Bienestar</p>
             </div>
         </div>
         <button class="menu-dots-btn" onclick="toggleDropdown(event)">
@@ -832,24 +832,45 @@
         ];
 
         let state = {
-            currentView: 'home',
-            favorites: JSON.parse(localStorage.getItem('golden_favs')) || [],
-            habitsCheck: JSON.parse(localStorage.getItem('golden_habits')) || { date: '', water: false, walk: false, supplement: false },
-            streak: parseInt(localStorage.getItem('golden_streak')) || 0,
-            activeCategory: 'all',
-            searchQuery: ''
-        };
+    user: { 
+        username: "Invitado Anónimo", 
+        idTelegram: 12345678,
+        balance: 100, 
+        role: "user", 
+        range: 1,
+        pointsProgress: 25,
+        seed: "carlos",
+        isVipMember: false, 
+        equipped: { clothing: "", glasses: "" }
+    },
+    favorites: [], 
+    history: [], 
+    systemLogs: [],
+    purchasedItems: [],
+    adminFilterOnly: false,
+
+    // 🌟 NUEVAS PROPIEDADES INTEGRADAS PARA LOS HÁBITOS DE SANTOS:
+    streak: parseInt(localStorage.getItem('golden_streak')) || 0,
+    habitsCheck: JSON.parse(localStorage.getItem('golden_habits')) || {
+        date: '',
+        water: false,
+        walk: false,
+        supplement: false,
+        completed: false // Bloqueador diario activo
+    }
+};
 
         document.addEventListener("DOMContentLoaded", () => {
-            syncTelegramUser();
-            checkHabitDateRefresh();
-            renderAllViews();
-            renderStoreGrid(); // Forzado de arranque
-            calculateHealthMetrics();
-            if (typeof lucide !== 'undefined') {
-                lucide.createIcons();
-            }
-        });
+    syncTelegramUser();
+    checkHabitDateRefresh(); // 1. Verifica la fecha del sistema
+    updateHabitCheckboxesUI(); // 🌟 Añade esto aquí para pintar los checkboxes al arrancar
+    renderAllViews();
+    renderStoreGrid(); // Forzado de arranque
+    calculateHealthMetrics();
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
+});
 
         // ==========================================================================
         // 📋 ENGINE: NATIVE HEALTH TEST SYSTEM (METODO SANTOS)
