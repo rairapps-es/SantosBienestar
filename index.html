@@ -598,6 +598,146 @@
             padding: 40px 20px;
             color: var(--text-muted);
         }
+
+        /* Si tu app tiene modo oscuro nativo de Telegram, se adaptará automáticamente */
+
+.points-balance-card {
+
+    background: var(--bg-card);
+
+    border: 1px solid var(--border-color);
+
+    border-radius: 16px;
+
+    padding: 16px;
+
+    margin: 15px;
+
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+
+    backdrop-filter: blur(10px);
+
+}
+
+
+
+.points-info {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 14px;
+
+    margin-bottom: 12px;
+
+}
+
+
+
+.points-icon-box {
+
+    background: rgba(245, 158, 11, 0.15);
+
+    padding: 10px;
+
+    border-radius: 12px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+}
+
+
+
+.points-text {
+
+    display: flex;
+
+    flex-direction: column;
+
+}
+
+
+
+.points-label {
+
+    font-size: 0.75rem;
+
+    color: var(--text-muted);
+
+    text-transform: uppercase;
+
+    letter-spacing: 0.5px;
+
+}
+
+
+
+.points-value {
+
+    font-size: 1.6rem;
+
+    font-weight: 800;
+
+    margin: 2px 0 0 0;
+
+    line-height: 1;
+
+    display: flex;
+
+    align-items: baseline;
+
+    gap: 4px;
+
+}
+
+
+
+.points-value small {
+
+    font-size: 0.8rem;
+
+    color: var(--accent-gold);
+
+    font-weight: 600;
+
+}
+
+
+
+/* Barra de progreso inferior */
+
+.points-progress-bar-container {
+
+    width: 100%;
+
+    height: 6px;
+
+    background: rgba(255, 255, 255, 0.1);
+
+    border-radius: 10px;
+
+    overflow: hidden;
+
+}
+
+
+
+.points-progress-bar {
+
+    height: 100%;
+
+    background: linear-gradient(90deg, var(--accent-gold), #fb923c);
+
+    border-radius: 10px;
+
+    transition: width 0.4s ease;
+
+}
     </style>
 </head>
 <body>
@@ -613,6 +753,20 @@
         <button class="menu-dots-btn" onclick="toggleDropdown(event)">
             <i data-lucide="more-vertical"></i>
         </button>
+        <div class="points-balance-card">
+    <div class="points-info">
+        <div class="points-icon-box">
+            <i data-lucide="award" style="width: 24px; height: 24px; color: var(--accent-gold, #f59e0b);"></i>
+        </div>
+        <div class="points-text">
+            <span class="points-label">Mis Puntos Saludables</span>
+            <h3 class="points-value"><span id="user-points-num">0</span> <small>PTS</small></h3>
+        </div>
+    </div>
+    <div class="points-progress-bar-container">
+        <div class="points-progress-bar" style="width: 45%;"></div>
+    </div>
+</div>
         <div id="dropdown-box" class="dropdown-menu">
             <button class="dropdown-item" onclick="switchView('home')"><i data-lucide="home"></i> Inicio</button>
             <button class="dropdown-item" onclick="switchView('store')"><i data-lucide="shopping-bag"></i> Tienda</button>
