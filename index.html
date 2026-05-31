@@ -805,22 +805,23 @@
 
     <section id="view-home" class="view-section active">
         <div class="habits-container">
-            <div class="streak-counter">
-                <i data-lucide="flame"></i> Racha Saludable: <span id="streak-num">0</span> días
-            </div>
-            <div class="habit-row">
-                <div class="habit-info"><i data-lucide="droplet" style="color:#38bdf8;"></i><span>¿Bebiste 2L de Agua?</span></div>
-                <div class="checkbox-custom" id="chk-water" onclick="toggleHabit('water')"></div>
-            </div>
-            <div class="habit-row">
-                <div class="habit-info"><i data-lucide="footprints" style="color:#4ade80;"></i><span>¿Caminaste 30 Minutos?</span></div>
-                <div class="checkbox-custom" id="chk-walk" onclick="toggleHabit('walk')"></div>
-            </div>
-            <div class="habit-row">
-                <div class="habit-info"><i data-lucide="pill" style="color:#f43f5e;"></i><span>¿Tomaste tu Omnilife?</span></div>
-                <div class="checkbox-custom" id="chk-supplement" onclick="toggleHabit('supplement')"></div>
-            </div>
-        </div>
+    <div class="streak-counter">
+        <i data-lucide="flame"></i> Racha Saludable: <span id="streak-num">0</span> días
+    </div>
+    <div class="habit-row">
+        <!-- 🌟 AGREGADO EL ID AQUÍ ABAJO 🌟 -->
+        <div class="habit-info"><i data-lucide="droplet" style="color:#38bdf8;"></i><span id="habit-water-text">¿Bebiste 2L de Agua?</span></div>
+        <div class="checkbox-custom" id="chk-water" onclick="toggleHabit('water')"></div>
+    </div>
+    <div class="habit-row">
+        <div class="habit-info"><i data-lucide="footprints" style="color:#4ade80;"></i><span>¿Caminaste 30 Minutos?</span></div>
+        <div class="checkbox-custom" id="chk-walk" onclick="toggleHabit('walk')"></div>
+    </div>
+    <div class="habit-row">
+        <div class="habit-info"><i data-lucide="pill" style="color:#f43f5e;"></i><span>¿Tomaste tu Omnilife?</span></div>
+        <div class="checkbox-custom" id="chk-supplement" onclick="toggleHabit('supplement')"></div>
+    </div>
+</div>
 
         <div class="carousel-section">
             <div class="carousel-header">
@@ -1446,6 +1447,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
     state.currentView = targetId;
 
+    // 💧 ¡SINCRONIZACIÓN MAESTRA DEL AGUA EN CUALQUIER VISTA!
+    // Al dejarlo aquí fuera, nos aseguramos de que el texto del hábito se mantenga actualizado siempre
+    if (state.targetWater) {
+        const waterHabitLabel = document.getElementById('habit-water-text');
+        if (waterHabitLabel) {
+            waterHabitLabel.innerText = `¿Bebiste ${state.targetWater}L de Agua?`;
+        }
+    }
+
     // 🔄 Inicialización y renderizado dinámico según la pestaña activa
     if (targetId === 'favorites') renderFavoritesGrid();
     if (targetId === 'store') renderStoreGrid();
@@ -1456,22 +1466,13 @@ document.addEventListener("DOMContentLoaded", () => {
         renderSubscriptionCards(); // 💎 Renderiza las tarjetas evaluando si está bloqueada o activa
     }
     
-    // 👤 GESTIÓN DE LA VISTA DE PERFIL (O la vista donde tengas los hábitos)
+    // 👤 GESTIÓN DE LA VISTA DE PERFIL
     if (targetId === 'profile' || targetId === 'dashboard' || targetId === 'home') {
         // Actualizar estadísticas básicas
         const streakEl = document.getElementById('stat-streak');
         const favsEl = document.getElementById('stat-favs');
         if (streakEl) streakEl.innerText = `${state.streak} Días`;
         if (favsEl) favsEl.innerText = `${state.favorites.length} Items`;
-        
-        // 💧 ¡SINCRONIZACIÓN MAESTRA DEL AGUA!
-        // Si el usuario ya usó la calculadora y guardó sus litros, forzamos que el texto del hábito se actualice
-        if (state.targetWater) {
-            const waterHabitLabel = document.getElementById('habit-water-text');
-            if (waterHabitLabel) {
-                waterHabitLabel.innerText = `Beber ${state.targetWater} L de Agua`;
-            }
-        }
         
         // 💎 Actualiza la tarjeta de estado VIP del perfil
         if (typeof updateProfileSubscriptionUI === 'function') {
@@ -1770,23 +1771,16 @@ function updateHabitCheckboxesUI() {
     const liters = ((weight * 35) / 1000).toFixed(1);
     document.getElementById('water-result').innerText = `${liters} Litros / día`;
 
-    // 💾 1. GUARDAR EN EL ESTADO GLOBAL (Para que no se pierda al cambiar de pestaña)
+    // 💾 Guardar en el estado global de la app
     if (typeof state !== 'undefined') {
         state.userWeight = weight;
         state.targetWater = liters; 
     }
 
-    // 🔄 2. ACTUALIZAR EL TEXTO DEL CHECKBOX DE HÁBITOS DINÁMICAMENTE
-    // Buscamos el elemento de texto que acompaña al checkbox de agua (ajústalo si el ID de tu etiqueta varía)
+    // 🔄 Sincronizar el texto del hábito de forma inmediata
     const waterHabitLabel = document.getElementById('habit-water-text');
     if (waterHabitLabel) {
-        waterHabitLabel.innerText = `Beber ${liters} L de Agua`;
-    } else {
-        // Alternativa: Si no tienes ID en el texto, buscamos por el contenedor de la tarjeta de agua
-        // Esto busca un texto dentro de la sección que contenga la palabra "Litros" para actualizarlo
-        const alternativeLabel = document.querySelector('.habit-card span, .habit-item p');
-        // (Nota: Si ves que no cambia el texto, facilítame el HTML de tus checkboxes de hábitos 
-        // para darte el selector querySelector exacto).
+        waterHabitLabel.innerText = `¿Bebiste ${liters}L de Agua?`;
     }
 
     const recBox = document.getElementById('calc-recommendation-box');
